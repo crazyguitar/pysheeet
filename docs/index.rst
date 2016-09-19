@@ -20,3 +20,4 @@ Welcome to Python cheatsheet!
    notes/python-tests
    notes/python-capi
    notes/python-cstyle
+   notes/python-codegolf
