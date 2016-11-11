@@ -501,6 +501,7 @@ Decorator
 
     # see: PEP318
     >>> def decor(func):
+    ...   @functools.wraps(func)
     ...   def wrapper(*args,**kwargs):
     ...     print "wrapper"
     ...     func()
@@ -533,6 +534,7 @@ Decorator with arguments
 
     >>> def example(val):
     ...   def decor(func):
+    ...     @functools.wraps(func)
     ...     def wrapper(*args,**kargs):
     ...       print "Val is {0}".format(val)
     ...       func()
