@@ -229,3 +229,27 @@ Using triple-quote with an escaping backslash
     ... long python string'''
     >>> s
     'This is a very very very long python string'
+
+
+Using format % string to assign values 
+
+.. code-block:: python
+
+    >>> print("This is a %s %s" % ('long', 'string'))
+    >>> 'This is a long string' 
+
+Using new format() versions in accessing arguments by position
+
+.. code-block:: python
+
+    >>> a = 'long'
+    >>> b = 'string'
+    >>> print("This is a {0} {1}".format(a, b))
+    >>> 'This is a long string'
+
+Using new format() version with **kwargs arguments
+
+.. code-block:: python
+
+    >>> print("This is a {long} {string}".format(long = 'long', string='string'))
+    >>> 'This is a long string'
