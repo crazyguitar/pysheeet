@@ -259,5 +259,5 @@ Using ``Standard Template String``
 ... code-block:: python 
     >>> from string import Template
     >>> s = Template('This is a $long $string')
-    >>> s.subsitute(long='long', string='string')
+    >>> s.substitute(long='long', string='string')
     >>> 'This is a long string'
