@@ -6,30 +6,106 @@
 Unicode
 =======
 
+The main goal of this cheat sheet is to collect some common snippets which are
+related to Unicode. In Python 3, strings are represented by Unicode instead of
+bytes. Further information can be found on PEP `3100 <https://www.python.org/dev/peps/pep-3100>`_
+
+**ASCII** code is the most well-known standard which defines numeric codes
+for characters. The numeric values only define 128 characters originally,
+so ASCII only contains control codes, digits, lowercase letters, uppercase
+letters, etc. However, it is not enough for us to represent characters such as
+accented characters, Chinese characters, or emoji existed around the world.
+Therefore, **Unicode** was developed to solve this issues. It defines the
+*code point* to represent various characters like ASCII but the number of
+characters is up to 1,111,998.
+
 .. contents:: Table of Contents
     :backlinks: none
 
+String
+------
 
-Encode: unicode code point to bytes
-------------------------------------
-
-.. code-block:: python
-
-    >>> s = u'Café'
-    >>> type(s.encode('utf-8'))
-    <class 'bytes'>
-
-Decode: bytes to unicode code point
-------------------------------------
+In Python 2, strings are represented in *bytes*, not *Unicode*. Python provides
+different types of string such as Unicode string, raw string, and so on.
+In this case, if we want to declare a Unicode string, we add ``u`` prefix for
+string literals.
 
 .. code-block:: python
 
-    >>> s = bytes('Café', encoding='utf-8')
-    >>> s.decode('utf-8')
+    >>> s = 'Café'  # byte string
+    >>> s
+    'Caf\xc3\xa9'
+    >>> type(s)
+    <type 'str'>
+    >>> u = u'Café' # unicode string
+    >>> u
+    u'Caf\xe9'
+    >>> type(u)
+    <type 'unicode'>
+
+In Python 3, strings are represented in *Unicode*. If we want to represent a
+byte string, we add the ``b`` prefix for string literals. Note that the early
+Python versions (3.0-3.2) do not support the ``u`` prefix. In order to ease
+the pain to migrate Unicode aware applications from Python 2, Python 3.3 once
+again supports the ``u`` prefix for string literals. Further information can
+be found on PEP `414 <https://www.python.org/dev/peps/pep-0414>`_
+
+.. code-block:: python
+
+    >>> s = 'Café'
+    >>> type(s)
+    <class 'str'>
+    >>> s
+    'Café'
+    >>> s.encode('utf-8')
+    b'Caf\xc3\xa9'
+    >>> s.encode('utf-8').decode('utf-8')
     'Café'
 
-Get unicode code point
------------------------
+Characters
+----------
+
+Python 2 takes all string characters as bytes. In this case, the length of
+strings may be not equivalent to the number of characters. For example,
+the length of ``Café`` is 5, not 4 because ``é`` is encoded as a 2 bytes
+character.
+
+.. code-block:: python
+
+    >>> s= 'Café'
+    >>> print([_c for _c in s])
+    ['C', 'a', 'f', '\xc3', '\xa9']
+    >>> len(s)
+    5
+    >>> s = u'Café'
+    >>> print([_c for _c in s])
+    [u'C', u'a', u'f', u'\xe9']
+    >>> len(s)
+    4
+
+Python 3 takes all string characters as Unicode code point. The lenght of
+a string is always equivalent to the number of characters.
+
+.. code-block:: python
+
+    >>> s = 'Café'
+    >>> print([_c for _c in s])
+    ['C', 'a', 'f', 'é']
+    >>> len(s)
+    4
+    >>> bs = bytes(s, encoding='utf-8')
+    >>> print(bs)
+    b'Caf\xc3\xa9'
+    >>> len(bs)
+    5
+
+Unicode Code Point
+------------------
+
+`ord <https://docs.python.org/3/library/functions.html#ord>`_ is a powerful
+built-in function to get a Unicode code point from a given character.
+Consequently, If we want to check a Unicode code point of a character, we can
+use ``ord``.
 
 .. code-block:: python
 
@@ -46,74 +122,37 @@ Get unicode code point
     U+4e2d
     U+6587
 
-python2 ``str`` is equivalent to byte string
----------------------------------------------
+
+Encoding
+--------
+
+A *Unicode code point* transfers to a *byte string* is called encoding.
 
 .. code-block:: python
 
-    >>> s = 'Café'  # byte string
-    >>> s
-    'Caf\xc3\xa9'
-    >>> type(s)
-    <type 'str'>
-    >>> u = u'Café' # unicode string
-    >>> u
-    u'Caf\xe9'
-    >>> type(u)
-    <type 'unicode'>
-
-
-python3 ``str`` is equivalent to unicode string
--------------------------------------------------
-
-.. code-block:: python
-
-    >>> s = 'Café'
-    >>> type(s)
-    <class 'str'>
-    >>> s
-    'Café'
-    >>> s.encode('utf-8')
-    b'Caf\xc3\xa9'
-    >>> s.encode('utf-8').decode('utf-8')
-    'Café'
-
-
-python2 take ``str`` char as byte character
---------------------------------------------
-
-.. code-block:: python
-
-    >>> s= 'Café'
-    >>> print([_c for _c in s])
-    ['C', 'a', 'f', '\xc3', '\xa9']
-    >>> len(s)
-    5
     >>> s = u'Café'
-    >>> print([_c for _c in s])
-    [u'C', u'a', u'f', u'\xe9']
-    >>> len(s)
-    4
+    >>> type(s.encode('utf-8'))
+    <class 'bytes'>
 
-python3 take ``str`` char as unicode character
------------------------------------------------
+Decodeing
+---------
+
+A *byte string* transfers to a *Unicode code point* is called encoding.
 
 .. code-block:: python
 
-    >>> s = 'Café'
-    >>> print([_c for _c in s])
-    ['C', 'a', 'f', 'é']
-    >>> len(s)
-    4
-    >>> bs = bytes(s, encoding='utf-8')
-    >>> print(bs)
-    b'Caf\xc3\xa9'
-    >>> len(bs)
-   5
+    >>> s = bytes('Café', encoding='utf-8')
+    >>> s.decode('utf-8')
+    'Café'
 
+Unicode Normalization
+---------------------
 
-unicode normalization
-----------------------
+Some characters can be represented in two similar form. For example, the
+character, ``é`` can be written as ``e ́`` (Canonical Decomposition) or ``é``
+(Canonical Composition). In this case, we may acquire unexpected results when we
+are comparing two strings even though they look alike. Therefore, we can
+normalize a Unicode form to solve the issue.
 
 .. code-block:: python
 
@@ -147,117 +186,57 @@ unicode normalization
     (b'Cafe\xcc\x81', b'Cafe\xcc\x81')
 
 
-Avoid UnicodeDecodeError
--------------------------
+Avoid ``UnicodeDecodeError``
+----------------------------
+
+Python raises `UnicodeDecodeError` when byte strings cannot decode to Unicode
+code points. If we want to avoid this exception, we can pass *replace*,
+*backslashreplace*, or *ignore* to errors argument in `decode <https://docs.python.org/3/library/stdtypes.html#bytes.decode>`_.
 
 .. code-block:: python
 
-    # raise a UnicodeDecodeError
-
-    >>> u = b"0xff"
-    >>> u.decode('utf-8')
-    Traceback (most recent call last):
+    >>> u = b"\xff"
+    >>> u.decode('utf-8', 'strict')
+        Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
     UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
-
-    # raise a UnicodeDecodeError
-
-    >>> u.decode('utf-8', "strict")
-    Traceback (most recent call last):
-      File "<stdin>", line 1, in <module>
-    UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
-
-    # use U+FFFD, REPLACEMENT CHARACTER
-
+    >>> # use U+FFFD, REPLACEMENT CHARACTER
     >>> u.decode('utf-8', "replace")
     '\ufffd'
-
-    # inserts a \xNN escape sequence
-
+    >>> # inserts a \xNN escape sequence
     >>> u.decode('utf-8', "backslashreplace")
     '\\xff'
-
-    # leave the character out of the Unicode result
-
+    >>> # leave the character out of the Unicode result
     >>> u.decode('utf-8', "ignore")
     ''
 
 Long String
 -----------
 
-Original long string
+The following snippet shows common ways to declare a multi-line string in
+Python.
 
 .. code-block:: python
 
-    # original long string
-    >>> s = 'This is a very very very long python string'
-    >>> s
-    'This is a very very very long python string'
+    s = 'This is a very very very long python string'
 
-Single quote with an escaping backslash
+    # Single quote with an escaping backslash
+    s = "This is a very very very " \
+        "long python string"
 
-.. code-block:: python
+    # Using brackets
+    s = (
+        "This is a very very very "
+        "long python string"
+    )
 
-    >>> s = "This is a very very very " \
-    ...     "long python string"
-    >>> s
-    'This is a very very very long python string'
+    # Using ``+``
+    s = (
+        "This is a very very very " +
+        "long python string"
+    )
 
-Using brackets
+    # Using triple-quote with an escaping backslash
+    s = '''This is a very very very \
+    long python string'''
 
-.. code-block:: python
-
-    >>> s = ("This is a very very very "
-    ...      "long python string")
-    >>> s
-    'This is a very very very long python string'
-
-Using ``+``
-
-.. code-block:: python
-
-    >>> s = ("This is a very very very " +
-    ...      "long python string")
-    >>> s
-    'This is a very very very long python string'
-
-Using triple-quote with an escaping backslash
-
-.. code-block:: python
-
-    >>> s = '''This is a very very very \
-    ... long python string'''
-    >>> s
-    'This is a very very very long python string'
-
-
-String Formatting 
------------------
-
-... code-block:: python 
-
-    # using ``%`` operator
-    >>> print("This is a %s %s" % ('long', 'string'))
-    >>> 'This is a long string' 
-
-    # using new ``format`` function  with kwargs
-    >>> print("This is a {long} {string}".format(long='long', string='string'))
-
-    # using new ``format`` function with positional argument
-    >>> print("This is a {0} {1}".format(long, string))
-
-Using ``f-string``
-
-... code-block:: python
-    >>> long = 'long'
-    >>> string = 'string'
-    >>> f'This is a {long} {string}'
-    >>> 'This is a long string'
-
-Using ``Standard Template String`` 
-
-... code-block:: python 
-    >>> from string import Template
-    >>> s = Template('This is a $long $string')
-    >>> s.substitute(long='long', string='string')
-    >>> 'This is a long string'
