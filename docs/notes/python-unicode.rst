@@ -231,25 +231,33 @@ Using triple-quote with an escaping backslash
     'This is a very very very long python string'
 
 
-Using format % string to assign values 
+String Formatting 
+-----------------
 
-.. code-block:: python
+... code-block:: python 
 
+    # using ``%`` operator
     >>> print("This is a %s %s" % ('long', 'string'))
     >>> 'This is a long string' 
 
-Using new format() versions in accessing arguments by position
+    # using new ``format`` function  with kwargs
+    >>> print("This is a {long} {string}".format(long='long', string='string'))
 
-.. code-block:: python
+    # using new ``format`` function with positional argument
+    >>> print("This is a {0} {1}".format(long, string))
 
-    >>> a = 'long'
-    >>> b = 'string'
-    >>> print("This is a {0} {1}".format(a, b))
+Using ``f-string``
+
+... code-block:: python
+    >>> long = 'long'
+    >>> string = 'string'
+    >>> f'This is a {long} {string}'
     >>> 'This is a long string'
 
-Using new format() version with **kwargs arguments
+Using ``Standard Template String`` 
 
-.. code-block:: python
-
-    >>> print("This is a {long} {string}".format(long = 'long', string='string'))
+... code-block:: python 
+    >>> from string import Template
+    >>> s = Template('This is a $long $string')
+    >>> s.subsitute(long='long', string='string')
     >>> 'This is a long string'
