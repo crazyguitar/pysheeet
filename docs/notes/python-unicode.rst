@@ -246,7 +246,7 @@ String Formatting
     # using new ``format`` function with positional argument
     >>> print("This is a {0} {1}".format(long, string))
 
-Using ``f-string``
+Using  new ``f-string`` in python 3
 
 ... code-block:: python
     >>> long = 'long'
