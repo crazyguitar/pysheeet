@@ -463,6 +463,9 @@ of a class.
 
         def bar(self):
             """A method document."""
+        
+        def __bar(self):
+            """A private document."""
 
         def bar_with_arg(self, arg): ...
         def bar_with_args(self, *args): ...
