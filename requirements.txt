@@ -2,7 +2,7 @@ bandit==1.6.2
 coverage==4.5.3
 coveralls==1.8.1
 docutils==0.14
-Flask==1.0.3
+Flask==1.0.4
 Flask-SSLify==0.1.5
 Flask-Testing==0.7.1
 Flask-SeaSurf==0.2.2
