@@ -6,7 +6,7 @@ Flask-SSLify==0.1.5
 Flask-Testing==0.7.1
 Flask-SeaSurf==0.2.2
 flask-talisman==0.7.0
-gunicorn==20.0.0
+gunicorn==20.0.1
 pycodestyle==2.5.0
 pydocstyle==4.0.1
 requests==2.22.0
