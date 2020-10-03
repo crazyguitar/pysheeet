@@ -243,6 +243,11 @@ Match hex color value
 Match email
 ------------
 
+.. note::
+
+    For correct email checking via regular expressions it is better to use the full version of regex:
+    For example: https://github.com/chartbeat-labs/textacy/blob/3466a7b/src/textacy/preprocessing/resources.py#L61-L65
+
 .. code-block:: python
 
     >>> re.match('^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$',
@@ -261,6 +266,11 @@ Match email
 
 Match URL
 ----------
+
+.. note::
+
+    For correct url checking via regular expressions it is better to use the full version of regex:
+    For example: https://github.com/chartbeat-labs/textacy/blob/3466a7b/src/textacy/preprocessing/resources.py#L12-L47
 
 .. code-block:: python
 
