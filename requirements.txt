@@ -1,7 +1,7 @@
 bandit==1.7.0
 coverage==5.5
 coveralls==3.0.1
-Flask==1.1.2
+Flask==2.0.0
 Flask-SSLify==0.1.5
 Flask-Testing==0.8.1
 Flask-SeaSurf==0.3.0
