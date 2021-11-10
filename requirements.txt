@@ -10,5 +10,5 @@ gunicorn==20.1.0
 pycodestyle==2.8.0
 pydocstyle==6.1.1
 requests==2.26.0
-Sphinx==4.2.0
+Sphinx==4.3.0
 Werkzeug==2.0.2
