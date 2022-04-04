@@ -4,7 +4,7 @@ coveralls==3.3.1
 Flask==2.0.3
 Flask-SSLify==0.1.5
 Flask-Testing==0.8.1
-Flask-SeaSurf==0.3.1
+Flask-SeaSurf==1.0.0
 flask-talisman==1.0.0
 gunicorn==20.1.0
 pycodestyle==2.8.0
