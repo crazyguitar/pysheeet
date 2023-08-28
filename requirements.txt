@@ -10,6 +10,6 @@ gunicorn==21.2.0
 pycodestyle==2.11.0
 pydocstyle==6.3.0
 requests==2.31.0
-Sphinx==7.1.2
+Sphinx==7.2.4
 Werkzeug==2.3.7
 setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
