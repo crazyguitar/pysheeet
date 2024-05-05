@@ -1,4 +1,4 @@
-bandit==1.7.2
+bandit==1.7.7
 coverage==6.5.0
 coveralls==3.3.1
 Flask==2.3.3
@@ -6,7 +6,7 @@ Flask-SSLify==0.1.5
 Flask-Testing==0.8.1
 Flask-SeaSurf==1.1.1
 flask-talisman==1.1.0
-gunicorn==21.2.0
+gunicorn==22.0.0
 pycodestyle==2.11.1
 pydocstyle==6.3.0
 requests==2.31.0
