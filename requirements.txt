@@ -9,7 +9,7 @@ flask-talisman==1.1.0
 gunicorn==22.0.0
 pycodestyle==2.11.1
 pydocstyle==6.3.0
-requests==2.31.0
+requests==2.32.0
 Sphinx==7.1.2
 Werkzeug==3.0.3
 setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
