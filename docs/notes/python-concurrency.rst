@@ -102,7 +102,7 @@ Consumer and Producer
 
     # This architecture make concurrency easy
     >>> from threading import Thread
-    >>> from Queue import Queue
+    >>> from queue import Queue
     >>> from random import random
     >>> import time
     >>> q = Queue()
@@ -133,7 +133,7 @@ Thread Pool Template
 .. code-block:: python
 
     # producer and consumer architecture
-    from Queue import Queue
+    from queue import Queue
     from threading import Thread
 
     class Worker(Thread):
@@ -831,7 +831,7 @@ What does "with ThreadPoolExecutor" work?
 
     e = futures.ThreadPoolExecutor(3)
     fut = e.submit(fib, 30)
-    fut.result()
+    res = fut.result()
     e.shutdown(wait=True)
     print(res)
 
