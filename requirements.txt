@@ -12,7 +12,7 @@ pydocstyle==6.3.0
 requests==2.32.0
 Sphinx==7.1.2
 Werkzeug==3.0.6
-setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
+setuptools>=70.0.0 # not directly required, pinned by Snyk to avoid a vulnerability
 jinja2>=3.1.3 # not directly required, pinned by Snyk to avoid a vulnerability
 urllib3>=2.2.2 # not directly required, pinned by Snyk to avoid a vulnerability
 zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
