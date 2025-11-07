@@ -1,4 +1,4 @@
-coverage==7.11.0
+coverage==7.11.1
 bandit==1.8.6
 coveralls==4.0.1
 Flask==3.1.2
