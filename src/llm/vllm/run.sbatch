@@ -24,7 +24,7 @@ Options:
   -h,--help              show this help
   -m,--model MODEL       model path or HF ID (default: ${MODEL})
   -p,--port PORT         API port (default: ${PORT})
-  --image IMAGE          container image: .sqsh, .tar.gz, or registry path
+  --image IMAGE          container image: .tar.gz or registry path
   --tp SIZE              tensor parallel size (default: 1)
   --pp SIZE              pipeline parallel size (default: 1)
   --dp SIZE              data parallel size (auto-computed if omitted)
@@ -35,7 +35,7 @@ Options:
 
 Examples:
   salloc -N 2 bash $0 --image /fsx/images/vllm.tar.gz -m Qwen/Qwen3-30B-A3B-FP8 --tp 8
-  salloc -N 2 bash $0 --image /fsx/images/vllm.sqsh -m Qwen/Qwen3-30B-A3B-FP8 --tp 8 --ep
+  salloc -N 2 bash $0 --image /fsx/images/vllm.tar.gz -m Qwen/Qwen3-30B-A3B-FP8 --tp 8 --ep
   salloc -N 2 bash $0 --image registry.example.com/vllm:latest -m Qwen/Qwen3-30B-A3B-FP8 --tp 8 --pp 2
 EOF
 }
@@ -61,9 +61,9 @@ NUM_NODES=${SLURM_JOB_NUM_NODES:-1}
 GPUS_PER_NODE=8
 TOTAL_GPUS=$((NUM_NODES * GPUS_PER_NODE))
 
-NODES="($(scontrol show hostnames "$SLURM_JOB_NODELIST"))"
+readarray -t NODES < <(scontrol show hostnames "$SLURM_JOB_NODELIST")
 HEAD_NODE=${NODES[0]}
-HEAD_IP=$(srun --nodes=1 --nodelist="${HEAD_NODE}" hostname -I | awk '{print $1}')
+HEAD_IP=$(getent ahostsv4 "$HEAD_NODE" | head -1 | awk '{print $1}')
 
 if [[ -z "$DP" ]]; then
   DP=$((TOTAL_GPUS / (TP * PP)))
@@ -84,14 +84,12 @@ if [[ -z "$MODE" ]]; then
   fi
 fi
 
-mkdir -p logs
-LOGFILE="logs/vllm_server_${SLURM_JOB_ID:-$$}.log"
+mkdir -p "/fsx/users/${USER}/logs"
+LOGFILE="/fsx/users/${USER}/logs/vllm_server_${SLURM_JOB_ID:-$$}.log"
 info "Nodes=${NUM_NODES} Head=${HEAD_NODE}(${HEAD_IP}) GPUs=${TOTAL_GPUS}"
 info "Mode=${MODE} TP=${TP} PP=${PP} DP=${DP} EP=${ENABLE_EP}"
 info "Model=${MODEL} Image=${IMAGE}"
 
-# CONTAINER_IMAGE is set after load; RUNTIME tracks docker vs enroot
-RUNTIME="docker"
 CONTAINER_IMAGE=""
 
 load_or_pull_image() {
@@ -100,22 +98,16 @@ load_or_pull_image() {
     srun --ntasks-per-node=1 bash -c '
       docker ps -aq | xargs -r docker rm -f 2>/dev/null || true
       docker images -aq | xargs -r docker rmi -f 2>/dev/null || true
-      enroot list 2>/dev/null | xargs -r enroot remove -f 2>/dev/null || true
     '
   fi
 
-  if [[ "${IMAGE}" == *.sqsh ]]; then
-    info "Using enroot sqsh image: ${IMAGE}"
-    RUNTIME="enroot"
-    CONTAINER_IMAGE="${IMAGE}"
-  elif [[ "${IMAGE}" == *.tar.gz ]]; then
+  if [[ "${IMAGE}" == *.tar.gz ]]; then
     info "Loading Docker image from tarball: ${IMAGE}"
     srun --ntasks-per-node=1 bash -c "
       if ! docker image inspect vllm-serve:latest &>/dev/null; then
         pigz -dc '${IMAGE}' | docker load
       fi
     "
-    RUNTIME="docker"
     CONTAINER_IMAGE="vllm-serve:latest"
   else
     info "Pulling Docker image from registry: ${IMAGE}"
@@ -130,16 +122,25 @@ load_or_pull_image() {
         docker pull '${IMAGE}'
       fi
     "
-    RUNTIME="docker"
     CONTAINER_IMAGE="${IMAGE}"
   fi
 }
 
 
-# Launch a named Docker container with EFA + GPU support.
-# Usage: launch_container <name> <cmd>
+# Launch a named Docker container with GPU support on a specific node.
+# Container runs 'sleep infinity' — use docker exec to run commands inside.
+# Usage: launch <node> <name>
+launch() {
+  local node="$1" name="$2"
+  srun --nodes=1 --nodelist="${node}" bash -c "
+    $(declare -f launch_container)
+    CONTAINER_IMAGE='${CONTAINER_IMAGE}' launch_container '${name}'
+  "
+}
+
+# Run docker locally — called by launch() on the target node via srun.
 launch_container() {
-  local name="$1" cmd="$2"
+  local name="$1"
 
   # idempotent: skip if already running
   if docker ps --format '{{.Names}}' | grep -q "^${name}$"; then
@@ -152,6 +153,8 @@ launch_container() {
     devices+=("--device=${d}")
   done < <(find /dev/infiniband -name "uverbs*" -print0 2>/dev/null)
 
+  local net_if="${GLOO_SOCKET_IFNAME:-$(ip -o -4 route show to default | awk '{print $5}' | head -1)}"
+
   docker run --gpus all \
     --privileged -d \
     --name "${name}" \
@@ -160,41 +163,29 @@ launch_container() {
     --security-opt seccomp=unconfined \
     "${devices[@]}" \
     -v /fsx:/fsx \
+    -e NCCL_SOCKET_IFNAME="${net_if}" \
+    -e GLOO_SOCKET_IFNAME="${net_if}" \
+    -e TP_SOCKET_IFNAME="${net_if}" \
     --entrypoint bash \
-    "${CONTAINER_IMAGE}" -c "${cmd}"
-}
-
-# Run cmd in a detached container on a node.
-# Docker: launch_container + docker exec -d. Enroot: srun --container-image &.
-# Usage: launch <node> <name> <cmd>
-node_run() {
-  local node="$1" name="$2" cmd="$3"
-
-  if [[ "$RUNTIME" == "enroot" ]]; then
-    srun --nodes=1 --nodelist="${node}" \
-      --container-image="${CONTAINER_IMAGE}" \
-      --container-mounts="/fsx:/fsx" \
-      --no-container-mount-home \
-      bash -c "${cmd}" &
-  else
-    srun --nodes=1 --nodelist="${node}" bash -c "
-      $(declare -f launch_container)
-      CONTAINER_IMAGE='${CONTAINER_IMAGE}' launch_container '${name}' 'sleep infinity'
-    "
-    srun --nodes=1 --nodelist="${node}" bash -c "docker exec -d ${name} bash -c '${cmd}'"
-  fi
+    "${CONTAINER_IMAGE}" -c "sleep infinity"
 }
 
 
 launch_ray() {
   info "Starting Ray head on ${HEAD_NODE}..."
-  launch "${HEAD_NODE}" "vllm-head" \
-    "ray start --head --port=6379 --num-gpus=${GPUS_PER_NODE} --disable-usage-stats"
+  launch "${HEAD_NODE}" "vllm-head"
+  sleep 5
+  srun --nodes=1 --nodelist="${HEAD_NODE}" bash -c "
+    docker exec vllm-head ray start --head --port=6379 --num-gpus=${GPUS_PER_NODE} --disable-usage-stats
+  "
 
   for i in $(seq 1 $((NUM_NODES - 1))); do
     info "Starting Ray worker on ${NODES[$i]}..."
-    launch "${NODES[$i]}" "vllm-worker-${i}" \
-      "ray start --address=${HEAD_IP}:6379 --num-gpus=${GPUS_PER_NODE} --disable-usage-stats"
+    launch "${NODES[$i]}" "vllm-worker-${i}"
+    sleep 5
+    srun --nodes=1 --nodelist="${NODES[$i]}" bash -c "
+      docker exec vllm-worker-${i} ray start --address=${HEAD_IP}:6379 --num-gpus=${GPUS_PER_NODE} --disable-usage-stats
+    "
   done
 
   # wait for GPUs
@@ -215,8 +206,9 @@ launch_ray() {
   [[ "$ENABLE_EP" == "true" ]] && args+=" --enable-expert-parallel"
   [[ "$PP" -gt 1 ]] && args+=" --pipeline-parallel-size ${PP}"
 
-  launch "${HEAD_NODE}" "vllm-head" \
-    "vllm serve ${MODEL} ${args} ${EXTRA_ARGS[*]+"${EXTRA_ARGS[*]}"} 2>&1 | tee ${LOGFILE}"
+  srun --nodes=1 --nodelist="${HEAD_NODE}" bash -c "
+    docker exec -d vllm-head bash -c 'vllm serve ${MODEL} ${args} ${EXTRA_ARGS[*]+"${EXTRA_ARGS[*]}"} 2>&1 | tee ${LOGFILE}'
+  "
 }
 
 launch_mp() {
@@ -224,14 +216,24 @@ launch_mp() {
   local common="--tensor-parallel-size ${TP} --pipeline-parallel-size ${PP}"
   common+=" --nnodes ${NUM_NODES} --master-addr ${HEAD_IP} --master-port 29500 --gpu-memory-utilization 0.9"
 
+  # Start containers on all nodes
+  for i in $(seq 0 $((NUM_NODES - 1))); do
+    launch "${NODES[$i]}" "vllm-node-${i}"
+  done
+  sleep 3
+
+  # Workers first (headless)
   for i in $(seq 1 $((NUM_NODES - 1))); do
     info "Starting worker on ${NODES[$i]} (rank ${i})..."
-    launch "${NODES[$i]}" "vllm-worker-${i}" \
-      "vllm serve ${MODEL} ${common} --node-rank ${i} --headless ${EXTRA_ARGS[*]+"${EXTRA_ARGS[*]}"}"
+    srun --nodes=1 --nodelist="${NODES[$i]}" bash -c "
+      docker exec -d vllm-node-${i} bash -c 'vllm serve ${MODEL} ${common} --node-rank ${i} --headless ${EXTRA_ARGS[*]+"${EXTRA_ARGS[*]}"}'
+    "
   done
 
-  launch "${HEAD_NODE}" "vllm-head" \
-    "vllm serve ${MODEL} ${common} --host 0.0.0.0 --port ${PORT} --node-rank 0 ${EXTRA_ARGS[*]+"${EXTRA_ARGS[*]}"} 2>&1 | tee ${LOGFILE}"
+  # Head node
+  srun --nodes=1 --nodelist="${HEAD_NODE}" bash -c "
+    docker exec -d vllm-node-0 bash -c 'vllm serve ${MODEL} ${common} --host 0.0.0.0 --port ${PORT} --node-rank 0 ${EXTRA_ARGS[*]+"${EXTRA_ARGS[*]}"} 2>&1 | tee ${LOGFILE}'
+  "
 }
 
 launch_rpc() {
@@ -242,15 +244,26 @@ launch_rpc() {
   common+=" --data-parallel-rpc-port 13345 --gpu-memory-utilization 0.9"
   [[ "$PP" -gt 1 ]] && common+=" --pipeline-parallel-size ${PP}"
 
+  # Start containers on all nodes
+  launch "${HEAD_NODE}" "vllm-head"
+  for i in $(seq 1 $((NUM_NODES - 1))); do
+    launch "${NODES[$i]}" "vllm-worker-${i}"
+  done
+  sleep 3
+
+  # Workers first (headless)
   for i in $(seq 1 $((NUM_NODES - 1))); do
     local start_rank=$((i * dp_local))
     info "Starting RPC worker on ${NODES[$i]} (start-rank ${start_rank})..."
-    launch "${NODES[$i]}" "vllm-worker-${i}" \
-      "vllm serve ${MODEL} ${common} --data-parallel-start-rank ${start_rank} --headless ${EXTRA_ARGS[*]+"${EXTRA_ARGS[*]}"}"
+    srun --nodes=1 --nodelist="${NODES[$i]}" bash -c "
+      docker exec -d vllm-worker-${i} bash -c 'vllm serve ${MODEL} ${common} --data-parallel-start-rank ${start_rank} --headless ${EXTRA_ARGS[*]+"${EXTRA_ARGS[*]}"}'
+    "
   done
 
-  launch "${HEAD_NODE}" "vllm-head" \
-    "vllm serve ${MODEL} ${common} --host 0.0.0.0 --port ${PORT} ${EXTRA_ARGS[*]+"${EXTRA_ARGS[*]}"} 2>&1 | tee ${LOGFILE}"
+  # Head node
+  srun --nodes=1 --nodelist="${HEAD_NODE}" bash -c "
+    docker exec -d vllm-head bash -c 'vllm serve ${MODEL} ${common} --host 0.0.0.0 --port ${PORT} ${EXTRA_ARGS[*]+"${EXTRA_ARGS[*]}"} 2>&1 | tee ${LOGFILE}'
+  "
 }
 
 wait_for_server() {

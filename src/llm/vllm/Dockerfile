@@ -190,6 +190,13 @@ ENV NVSHMEM_DISABLE_CUDA_VMM=1
 # Install vLLM
 RUN pip3 install --no-cache-dir vllm==${VLLM_VERSION}
 
+# Install DeepGEMM (requires torch from vLLM)
+RUN git clone --recursive -b v2.1.1.post3 https://github.com/deepseek-ai/DeepGEMM.git /tmp/deepgemm \
+    && cd /tmp/deepgemm \
+    && python3 setup.py bdist_wheel \
+    && pip3 install dist/*.whl \
+    && rm -rf /tmp/deepgemm
+
 # Copy run.sh script
 COPY run.sh /workspace/run.sh
 RUN chmod +x /workspace/run.sh
