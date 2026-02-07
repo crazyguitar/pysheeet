@@ -8,15 +8,23 @@ DP_BACKEND="${DP_BACKEND:-rpc}"
 info() { echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')][info] $*"; }
 err()  { echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')][error] $*" >&2; }
 
-IMAGE="${IMAGE:-/fsx/users/${USER}/images/moe-benchmark-latest.tar.gz}"
+IMAGE=""
+CONTAINER_MOUNT="/fsx"
+WORKSPACE="$PWD"
+FORCE_PULL=false
 SERVE_ARGS=()
 
 while (( "$#" )); do
   case "$1" in
-    --image) IMAGE="$2"; shift 2 ;;
-    *)       SERVE_ARGS+=("$1"); shift ;;
+    --image)            IMAGE="$2"; shift 2 ;;
+    --container-mount)  CONTAINER_MOUNT="$2"; shift 2 ;;
+    --workspace|-w)     WORKSPACE="$2"; shift 2 ;;
+    --force|-f)         FORCE_PULL=true; shift ;;
+    *)                  SERVE_ARGS+=("$1"); shift ;;
   esac
 done
+IMAGE="${IMAGE:-${WORKSPACE}/vllm-serve-latest.tar.gz}"
+LOGDIR="${WORKSPACE}/logs"
 
 # Peek at SERVE_ARGS to extract values needed for topology computation
 _peek_arg() {
@@ -40,7 +48,7 @@ PP=$(_peek_arg "-pp" "--pipeline-parallel-size" "1")
 ENABLE_EP=$(_has_flag "--enable-expert-parallel" && echo "true" || echo "false")
 
 load_or_pull_image() {
-  if [[ "${FORCE_PULL:-0}" == "1" ]]; then
+  if [[ "${FORCE_PULL}" == "true" ]]; then
     info "Force pull: cleaning up existing images..."
     srun --ntasks-per-node=1 bash -c '
       docker ps -aq | xargs -r docker rm -f 2>/dev/null || true
@@ -50,12 +58,13 @@ load_or_pull_image() {
 
   if [[ "${IMAGE}" == *.tar.gz ]]; then
     info "Loading Docker image from tarball..."
+    CONTAINER_IMAGE=$(pigz -dc "${IMAGE}" | tar -xf - -O manifest.json | python3 -c "import sys,json; print(json.load(sys.stdin)[0]['RepoTags'][0])")
+    info "Image tag: ${CONTAINER_IMAGE}"
     srun --ntasks-per-node=1 bash -c "
-      if ! docker image inspect moe-benchmark:latest &>/dev/null; then
+      if ! docker image inspect '${CONTAINER_IMAGE}' &>/dev/null; then
         pigz -dc '${IMAGE}' | docker load
       fi
     "
-    CONTAINER_IMAGE="moe-benchmark:latest"
   else
     info "Pulling Docker image from registry..."
     local registry="${IMAGE%%/*}"
@@ -87,7 +96,7 @@ launch_container() {
     --ulimit stack=67108864 --ulimit memlock=-1 \
     --security-opt seccomp=unconfined \
     "${devices[@]}" \
-    -v /fsx:/fsx \
+    -v "${CONTAINER_MOUNT}:${CONTAINER_MOUNT}" \
     -e NCCL_SOCKET_IFNAME="${net_if}" \
     -e GLOO_SOCKET_IFNAME="${net_if}" \
     -e TP_SOCKET_IFNAME="${net_if}" \
@@ -128,7 +137,7 @@ setup_topology() {
   RAY_PORT=$((6379 + (SLURM_JOB_ID % 1000)))
   RPC_PORT=$((13345 + (SLURM_JOB_ID % 1000)))
 
-  mkdir -p "/fsx/users/${USER}/logs"
+  mkdir -p "${LOGDIR}"
 
   info "========================================"
   info "vLLM Server"
@@ -145,16 +154,15 @@ cleanup() {
   info "Cleaning up containers..."
   srun --ntasks-per-node=1 bash -c '
     docker ps -aq | xargs -r docker rm -f 2>/dev/null || true
-    docker images -aq | xargs -r docker rmi -f 2>/dev/null || true
   ' 2>/dev/null || true
-  rm -f "/fsx/users/${USER}/logs/vllm_server_${SLURM_JOB_ID}.log"
+  rm -f "${LOGDIR}/vllm_server_${SLURM_JOB_ID}.log"
 }
 
 start_ray_head() {
   info "Starting Ray head on ${HEAD_NODE}..."
   srun --nodes=1 --nodelist="${HEAD_NODE}" bash -c "
     $(declare -f launch_container)
-    CONTAINER_IMAGE='${CONTAINER_IMAGE:-}' IMAGE='${IMAGE}' GPUS='${GPUS}' launch_container ray-head 'sleep infinity'
+    CONTAINER_IMAGE='${CONTAINER_IMAGE:-}' IMAGE='${IMAGE}' GPUS='${GPUS}' CONTAINER_MOUNT='${CONTAINER_MOUNT}' launch_container ray-head 'sleep infinity'
   "
   sleep 5
   srun --nodes=1 --nodelist="${HEAD_NODE}" bash -c "
@@ -169,7 +177,7 @@ start_ray_workers() {
   info "Starting Ray workers on ${worker_nodes}..."
   srun --nodes=$((NUM_NODES - 1)) --nodelist="${worker_nodes}" --ntasks-per-node=1 bash -c "
     $(declare -f launch_container)
-    CONTAINER_IMAGE='${CONTAINER_IMAGE:-}' IMAGE='${IMAGE}' GPUS='${GPUS}' launch_container ray-worker 'sleep infinity'
+    CONTAINER_IMAGE='${CONTAINER_IMAGE:-}' IMAGE='${IMAGE}' GPUS='${GPUS}' CONTAINER_MOUNT='${CONTAINER_MOUNT}' launch_container ray-worker 'sleep infinity'
   "
   sleep 5
   srun --nodes=$((NUM_NODES - 1)) --nodelist="${worker_nodes}" --ntasks-per-node=1 bash -c "
@@ -194,7 +202,7 @@ wait_for_gpus() {
 
 start_vllm_ray() {
   info "Launching vllm serve (Ray)..."
-  local logfile="/fsx/users/${USER}/logs/vllm_server_${SLURM_JOB_ID}.log"
+  local logfile="${LOGDIR}/vllm_server_${SLURM_JOB_ID}.log"
   local extra="--host 0.0.0.0 --port 8000 --data-parallel-backend ray --data-parallel-address ${HEAD_IP} --data-parallel-size ${DP}"
 
   srun --nodes=1 --nodelist="${HEAD_NODE}" bash -c \
@@ -203,12 +211,12 @@ start_vllm_ray() {
 
 start_vllm_mp() {
   info "Starting vLLM with PP (multiprocessing)..."
-  local logfile="/fsx/users/${USER}/logs/vllm_server_${SLURM_JOB_ID}.log"
+  local logfile="${LOGDIR}/vllm_server_${SLURM_JOB_ID}.log"
 
   for i in $(seq 0 $((NUM_NODES - 1))); do
     srun --nodes=1 --nodelist="${NODES[$i]}" bash -c "
       $(declare -f launch_container)
-      IMAGE='${CONTAINER_IMAGE:-${IMAGE}}' GPUS='${GPUS}' launch_container vllm-node-${i} 'sleep infinity'
+      IMAGE='${CONTAINER_IMAGE:-${IMAGE}}' GPUS='${GPUS}' CONTAINER_MOUNT='${CONTAINER_MOUNT}' launch_container vllm-node-${i} 'sleep infinity'
     " &
   done
   wait
@@ -229,16 +237,16 @@ start_vllm_mp() {
 # =============================================================================
 start_vllm_rpc() {
   info "Starting vLLM with RPC-based DP..."
-  local logfile="/fsx/users/${USER}/logs/vllm_server_${SLURM_JOB_ID}.log"
+  local logfile="${LOGDIR}/vllm_server_${SLURM_JOB_ID}.log"
 
   srun --nodes=1 --nodelist="${HEAD_NODE}" bash -c "
     $(declare -f launch_container)
-    IMAGE='${CONTAINER_IMAGE:-${IMAGE}}' GPUS='${GPUS}' launch_container vllm-head 'sleep infinity'
+    IMAGE='${CONTAINER_IMAGE:-${IMAGE}}' GPUS='${GPUS}' CONTAINER_MOUNT='${CONTAINER_MOUNT}' launch_container vllm-head 'sleep infinity'
   "
   for i in $(seq 1 $((NUM_NODES - 1))); do
     srun --nodes=1 --nodelist="${NODES[$i]}" bash -c "
       $(declare -f launch_container)
-      IMAGE='${CONTAINER_IMAGE:-${IMAGE}}' GPUS='${GPUS}' launch_container vllm-worker 'sleep infinity'
+      IMAGE='${CONTAINER_IMAGE:-${IMAGE}}' GPUS='${GPUS}' CONTAINER_MOUNT='${CONTAINER_MOUNT}' launch_container vllm-worker 'sleep infinity'
     "
   done
   sleep 3
@@ -251,7 +259,7 @@ start_vllm_rpc() {
     srun --nodes=1 --nodelist="${NODES[$i]}" bash -c "
       docker exec -d vllm-worker bash -c 'vllm serve ${SERVE_ARGS[*]} ${extra} \
         --data-parallel-start-rank ${start_rank} --headless \
-        2>&1 | tee /fsx/users/${USER}/logs/vllm_worker_${SLURM_JOB_ID}_${i}.log'
+        2>&1 | tee ${LOGDIR}/vllm_worker_${SLURM_JOB_ID}_${i}.log'
     "
   done
 
@@ -279,7 +287,7 @@ setup_topology
 trap cleanup EXIT
 cleanup
 
-LOGFILE="/fsx/users/${USER}/logs/vllm_server_${SLURM_JOB_ID}.log"
+LOGFILE="${LOGDIR}/vllm_server_${SLURM_JOB_ID}.log"
 
 load_or_pull_image
 
@@ -296,11 +304,8 @@ case "${DP_BACKEND}" in
 esac
 
 tail -f "${LOGFILE}" 2>/dev/null &
-TAIL_PID=$!
 
 wait_for_server || exit 1
-
-kill "${TAIL_PID}" 2>/dev/null || true
 
 info "vLLM serving on ${HEAD_IP}:8000 — Ctrl+C or scancel to stop"
 info "Logs: ${LOGFILE}"
