@@ -1,6 +1,6 @@
 .. meta::
-    :description lang=en: Complete vLLM serving guide for production LLM inference deployment. Learn distributed serving, multi-node setup, Ray cluster, RPC backend, tensor parallelism, pipeline parallelism, and GPU optimization for large language models.
-    :keywords: vLLM, LLM inference, model serving, distributed inference, Ray, RPC, tensor parallel, pipeline parallel, data parallel, expert parallel, GPU optimization, OpenAI API, production deployment, multi-node serving, HPC, EFA, NCCL
+    :description lang=en: Complete vLLM serving guide — single-node, multi-node SLURM, Docker, Ray, RPC, tensor/pipeline/data/expert parallelism for production LLM inference on GPU clusters with EFA.
+    :keywords: vLLM, vLLM serving, vLLM tutorial, LLM inference, LLM serving, model serving, distributed inference, Ray cluster, RPC backend, tensor parallelism, pipeline parallelism, data parallelism, expert parallelism, MoE serving, GPU inference, OpenAI compatible API, multi-node GPU, multi-GPU serving, SLURM, HPC, EFA, NCCL, PagedAttention, continuous batching, Docker, production deployment, Qwen, Llama, DeepSeek
 
 ============
 vLLM Serving

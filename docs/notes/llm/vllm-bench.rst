@@ -1,6 +1,6 @@
 .. meta::
-    :description lang=en: vLLM benchmark suite for measuring serving performance. Covers throughput, prefill TTFT, decode ITL, latency, concurrency, long context, ShareGPT, prefix caching, and parameter sweeps.
-    :keywords: vLLM, benchmark, throughput, latency, TTFT, ITL, TPOT, prefill, decode, concurrency, ShareGPT, prefix caching, sonnet, sweep, GPU, LLM inference, serving performance
+    :description lang=en: vLLM benchmark suite — measure throughput, TTFT, ITL, latency, concurrency saturation, long context, ShareGPT, prefix caching, and parameter sweeps for LLM serving performance.
+    :keywords: vLLM benchmark, vLLM performance, LLM benchmark, serving benchmark, throughput benchmark, latency benchmark, TTFT, time to first token, ITL, inter-token latency, TPOT, prefill, decode, concurrency, ShareGPT, prefix caching, long context, parameter sweep, GPU benchmark, vllm bench serve, tokens per second, request rate, LLM inference performance
 
 ==============
 vLLM Benchmark

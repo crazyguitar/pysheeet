@@ -1,6 +1,6 @@
 .. meta::
-    :description lang=en: Large Language Models (LLM) guide covering PyTorch, distributed training, and vLLM inference optimization
-    :keywords: LLM, Large Language Models, PyTorch, vLLM, distributed training, model inference, GPU optimization, CUDA, transformer models, model serving
+    :description lang=en: Large Language Models (LLM) cheat sheet — PyTorch, distributed training, vLLM serving, and benchmarking for GPU clusters.
+    :keywords: LLM, Large Language Models, PyTorch, vLLM, distributed training, model inference, model serving, GPU optimization, CUDA, transformer models, LLM tutorial, LLM cheat sheet, vLLM tutorial, vLLM benchmark
 
 LLM
 ===
