@@ -1,4 +1,4 @@
-.PHONY: help docker sqush save load single ray mp rpc test clean
+.PHONY: help docker sqush save load single ray mp rpc test bench clean
 
 # Default target
 .DEFAULT_GOAL := help
@@ -19,6 +19,8 @@ help:
 	@echo "  mp                  Multiprocessing mode (TP/PP)"
 	@echo "  rpc                 RPC mode for multi-node (TP/DP)"
 	@echo "  test                Test vLLM API endpoints"
+	@echo "  bench               Run benchmarks (HOST=ip IMAGE=path)"
+	@echo "                      BENCH_TYPE=throughput,prefill,... to select"
 	@echo ""
 	@echo "Variables:"
 	@echo "  MODEL=$(MODEL)"
@@ -31,6 +33,8 @@ help:
 	@echo "  make single MODEL=Qwen/Qwen2.5-14B-Instruct"
 	@echo "  make mp TP=4 PP=2"
 	@echo "  make rpc TP=2 DP=4 HEAD_IP=10.0.0.1 NODE_RANK=0"
+	@echo "  make bench HOST=10.0.128.193"
+	@echo "  make bench HOST=10.0.128.193 BENCH_TYPE=throughput,prefill"
 	@echo ""
 	@echo "Cleanup:"
 	@echo "  clean               Remove containers and images"
@@ -43,7 +47,8 @@ PORT ?= 8000
 TP ?= 1
 PP ?= 1
 DP ?= 1
-HEAD_IP ?= 127.0.0.1
+HOST ?= localhost
+BENCH_TYPE ?=
 NODE_RANK ?= 0
 
 # Discover EFA devices dynamically
@@ -62,6 +67,7 @@ DOCKER_RUN = docker run --gpus all \
 	--rm \
 	--name $(CONTAINER_NAME) \
 	-v /fsx:/fsx \
+	-v $(PWD):$(PWD) -w $(PWD) \
 	--entrypoint bash \
 	$(IMAGE_NAME):$(IMAGE_TAG)
 
@@ -101,6 +107,13 @@ rpc:
 # Test API endpoints
 test:
 	@./test.sh
+
+# Run benchmarks inside Docker container
+# Usage: make bench HOST=10.0.128.193
+#        make bench HOST=10.0.128.193 BENCH_TYPE=throughput,prefill
+bench:
+	-@docker rm -f $(CONTAINER_NAME) 2>/dev/null || true
+	$(DOCKER_RUN) bench.sh -H $(HOST) -p $(PORT) $(if $(BENCH_TYPE),--type $(BENCH_TYPE))
 
 # Clean up containers and images
 clean:
