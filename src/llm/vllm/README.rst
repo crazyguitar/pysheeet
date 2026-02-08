@@ -216,6 +216,57 @@ management automatically.
     make bench HOST=10.0.128.193
     make bench HOST=10.0.128.193 BENCH_TYPE=throughput,prefill
 
+Sweep
+-----
+
+``sweep.sh`` runs predefined sweep suites by calling ``sweep.sbatch`` for each
+configuration. Each suite launches its own ``vllm serve``, sweeps a parameter, and
+collects results. Requires GPU access.
+
+.. code-block:: bash
+
+    # All suites (rate, concurrency, input, output)
+    bash sweep.sh -m Qwen/Qwen3-0.6B
+
+    # Select specific suites
+    bash sweep.sh -m Qwen/Qwen3-30B-A3B-FP8 \
+        -i vllm-serve:latest \
+        --serve-cmd "vllm serve Qwen/Qwen3-30B-A3B-FP8 -tp 8 --enable-expert-parallel" \
+        --type rate,input
+
+    # Via Makefile
+    make sweep
+    make sweep SWEEP_MODEL=Qwen/Qwen3-30B-A3B-FP8 SWEEP_TYPE=rate,concurrency
+
+    # Show vllm serve stdout (model loading, request logs) — very useful for debugging
+    bash sweep.sh -m Qwen/Qwen3-0.6B --show-stdout
+
+    # Custom serve command — TP=2 with expert parallel, rate sweep only
+    bash sweep.sh -m Qwen/Qwen1.5-MoE-A2.7B \
+        --serve-cmd "vllm serve Qwen/Qwen1.5-MoE-A2.7B -tp 2 --enable-expert-parallel" \
+        --type rate --show-stdout
+
+Available suites:
+
+- **rate** — Sweeps request rate (1, 2, 4, 8, 16, 32, inf) to find saturation point
+- **concurrency** — Sweeps concurrent requests (1–128) to find optimal batch size
+- **input** — Sweeps input length (128–16K) to measure TTFT scaling with context
+- **output** — Sweeps output length (64–2048) to measure ITL as KV cache grows
+
+For direct control over sweep parameters, use ``sweep.sbatch`` which passes all args
+through to ``vllm bench sweep serve``:
+
+.. code-block:: bash
+
+    # Custom serve + bench commands
+    bash sweep.sbatch -m Qwen/Qwen3-30B-A3B-FP8 \
+        --serve-cmd "vllm serve Qwen/Qwen3-30B-A3B-FP8 -tp 8 --enable-expert-parallel" \
+        --bench-cmd "vllm bench serve --model Qwen/Qwen3-30B-A3B-FP8 --dataset-name sharegpt" \
+        --bench-params results/bench_params.json --show-stdout
+
+See the `vLLM Benchmark Guide <https://github.com/crazyguitar/pysheeet/blob/master/docs/notes/llm/vllm-bench.rst>`_
+for detailed explanations of each benchmark type and metric.
+
 Notes and Limitations
 ---------------------
 

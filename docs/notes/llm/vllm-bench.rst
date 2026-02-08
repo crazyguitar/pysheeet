@@ -19,9 +19,11 @@ The script handles Docker image loading and container management automatically. 
 registry) and re-executes itself inside the container. When running under a SLURM
 allocation, it uses ``srun`` to dispatch to the compute node.
 
-Source: `bench.sh`_, `run.sbatch`_
+Source: `bench.sh`_, `sweep.sh`_, `sweep.sbatch`_, `run.sbatch`_
 
 .. _bench.sh: https://github.com/crazyguitar/pysheeet/blob/master/src/llm/vllm/bench.sh
+.. _sweep.sh: https://github.com/crazyguitar/pysheeet/blob/master/src/llm/vllm/sweep.sh
+.. _sweep.sbatch: https://github.com/crazyguitar/pysheeet/blob/master/src/llm/vllm/sweep.sbatch
 .. _run.sbatch: https://github.com/crazyguitar/pysheeet/blob/master/src/llm/vllm/run.sbatch
 
 Quick Start
@@ -254,36 +256,25 @@ off quantifies the speedup.
 Sweep
 -----
 
-Systematically tests multiple parameter combinations using ``vllm bench sweep serve``.
-Unlike other benchmarks that hit an already-running server, sweep manages its own server
-lifecycle — it starts and stops ``vllm serve`` for each parameter combination.
+`sweep.sbatch`_ wraps ``vllm bench sweep serve`` in a GPU-enabled Docker container.
+Only ``-m`` and ``-i`` are consumed; all other args pass through to the upstream CLI.
+`sweep.sh`_ provides predefined suites (rate, concurrency, input, output) on top.
 
 .. code-block:: bash
 
-    vllm bench sweep serve \
-        --serve-cmd "vllm serve $MODEL" \
-        --bench-cmd "vllm bench serve --model $MODEL ..." \
-        --bench-params results/bench_params.json \
-        --num-runs 1 -o results/
+    # Single node — run all sweep suites
+    bash sweep.sh -m Qwen/Qwen3-0.6B --show-stdout
 
-``bench_params.json`` defines the parameter combinations to sweep. A default rate sweep
-is auto-generated if the file doesn't exist:
+    # Single node — rate sweep only
+    bash sweep.sh -m Qwen/Qwen3-0.6B --type rate --show-stdout
 
-.. code-block:: json
+    # Multi-node (2 nodes, TP=8)
+    salloc -N2 bash sweep.sh -m Qwen/Qwen1.5-MoE-A2.7B \
+        --serve-cmd "vllm serve Qwen/Qwen1.5-MoE-A2.7B -tp 8" --show-stdout
 
-    [
-      {"--request-rate": 1},
-      {"--request-rate": 4},
-      {"--request-rate": 8},
-      {"--request-rate": 16},
-      {"--request-rate": 32},
-      {"--request-rate": "inf"}
-    ]
-
-Optionally, ``serve_params.json`` sweeps server-side parameters (e.g.,
-``--max-num-seqs``). When both files are provided, sweep runs the Cartesian product of
-all combinations. Results are saved as a CSV summary for easy plotting of
-throughput-vs-latency curves.
+See `sweep.sh usage in README.rst
+<https://github.com/crazyguitar/pysheeet/blob/master/src/llm/vllm/README.rst>`_
+for suite details.
 
 Ref: `vLLM Sweep Documentation <https://docs.vllm.ai/en/latest/benchmarking/sweeps/>`_
 
