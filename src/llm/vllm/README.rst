@@ -58,8 +58,8 @@ inside a Docker container. The server exposes an OpenAI-compatible API on port 8
     # Pipeline parallel — split model into 2 stages, each with TP=4
     make mp TP=4 PP=2
 
-    # Ray backend with data parallelism — 2 replicas, each using 8 GPUs
-    make ray TP=8 DP=2
+    # Ray backend with data parallelism — 2 replicas, each using 4 GPUs
+    make ray TP=4 DP=2
 
 **Using Docker (via run.sh)** — the entrypoint script supports multiple serving modes
 (single, ray, mp, rpc) with explicit control over parallelism settings:
@@ -196,3 +196,20 @@ requests to interact with the OpenAI-compatible API:
 
     # Test with specific port and model
     bash test.sh -H 10.0.128.193 -p 8000 -m Qwen/Qwen3-30B-A3B-FP8
+
+Notes and Limitations
+---------------------
+
+**Parallelism constraints:**
+
+- vLLM does not support combining PP, TP, and DP simultaneously. When using PP mode,
+  DP is not available (``TOTAL_GPUS = TP × PP``).
+- EP and PP are mutually exclusive. Use EP for MoE models and PP for large dense models.
+- EP is computed automatically: ``EP = TP × DP = world_size``. As TP increases, DP
+  decreases proportionally to maintain the same total parallelism.
+
+**Formulas:**
+
+- EP mode: ``TOTAL_GPUS = DP × TP``, EP auto-computed by vLLM
+- PP mode: ``TOTAL_GPUS = TP × PP`` (no DP)
+- DP mode: ``TOTAL_GPUS = DP × TP``
