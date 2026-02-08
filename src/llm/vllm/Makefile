@@ -67,7 +67,6 @@ DOCKER_RUN = docker run --gpus all \
 	--rm \
 	--name $(CONTAINER_NAME) \
 	-v /fsx:/fsx \
-	-v $(PWD):$(PWD) -w $(PWD) \
 	--entrypoint bash \
 	$(IMAGE_NAME):$(IMAGE_TAG)
 
@@ -108,12 +107,11 @@ rpc:
 test:
 	@./test.sh
 
-# Run benchmarks inside Docker container
+# Run benchmarks (bench.sh handles Docker image loading and container launch)
 # Usage: make bench HOST=10.0.128.193
 #        make bench HOST=10.0.128.193 BENCH_TYPE=throughput,prefill
 bench:
-	-@docker rm -f $(CONTAINER_NAME) 2>/dev/null || true
-	$(DOCKER_RUN) bench.sh -H $(HOST) -p $(PORT) $(if $(BENCH_TYPE),--type $(BENCH_TYPE))
+	@bash bench.sh -H $(HOST) -p $(PORT) -i $(IMAGE_NAME):$(IMAGE_TAG) $(if $(BENCH_TYPE),--type $(BENCH_TYPE))
 
 # Clean up containers and images
 clean:

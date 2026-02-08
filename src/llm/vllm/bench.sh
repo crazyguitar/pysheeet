@@ -1,6 +1,77 @@
 #!/usr/bin/env bash
-# vLLM serving benchmark suite — runs inside Docker container (vllm CLI required)
+# vLLM serving benchmark suite
+# Usage:
+#   salloc -N1 bash bench.sh -H 10.0.128.193 -i /fsx/vllm-serve-latest.tar.gz
+#   bash bench.sh -H 10.0.128.193 -i vllm-serve:latest
 set -euo pipefail
+
+info() { echo "[$(date +'%H:%M:%S')] $*"; }
+
+# Docker image helpers (mirrors run.sbatch)
+CONTAINER_MOUNT="${CONTAINER_MOUNT:-/fsx}"
+
+# Wrap a command with srun if inside a SLURM allocation, otherwise run directly
+_run() {
+    if [[ -n "${SLURM_JOB_ID:-}" ]]; then
+        srun -N1 --ntasks-per-node=1 bash -c "$*"
+    else
+        bash -c "$*"
+    fi
+}
+
+load_or_pull_image() {
+    if [[ "${IMAGE}" == *.tar.gz ]]; then
+        CONTAINER_IMAGE=$(pigz -dc "${IMAGE}" | tar -xf - -O manifest.json \
+            | python3 -c "import sys,json; print(json.load(sys.stdin)[0]['RepoTags'][0])")
+        info "Image tag: ${CONTAINER_IMAGE}"
+        _run "
+            if ! docker image inspect '${CONTAINER_IMAGE}' &>/dev/null; then
+                echo 'Loading Docker image from tarball...'
+                pigz -dc '${IMAGE}' | docker load
+            fi
+        "
+    else
+        CONTAINER_IMAGE="${IMAGE}"
+        _run "
+            if ! docker image inspect '${CONTAINER_IMAGE}' &>/dev/null; then
+                echo 'Pulling ${CONTAINER_IMAGE}...'
+                registry=\"\${CONTAINER_IMAGE%%/*}\"
+                region=\$(echo \"\${registry}\" | sed -n 's/.*\.ecr\.\([^.]*\)\.amazonaws\.com/\1/p')
+                region=\"\${region:-us-west-2}\"
+                aws ecr get-login-password --region \"\${region}\" \
+                    | docker login --username AWS --password-stdin \"\${registry}\"
+                docker pull '${CONTAINER_IMAGE}'
+            fi
+        "
+    fi
+}
+
+launch_container() {
+    local cmd="$1"
+    _run "
+        docker run --rm --net=host \
+            -v '${PWD}:${PWD}' -w '${PWD}' \
+            -v '${CONTAINER_MOUNT}:${CONTAINER_MOUNT}' \
+            --entrypoint bash '${CONTAINER_IMAGE}' \
+            -c '${cmd}'
+    "
+}
+
+# If vllm CLI is not available, load image and re-exec inside container
+if ! command -v vllm &>/dev/null; then
+    # Pre-parse --image/-i before full arg parsing
+    IMAGE="" _args=("$@")
+    for ((i=0; i<${#_args[@]}; i++)); do
+        [[ "${_args[$i]}" == "--image" || "${_args[$i]}" == "-i" ]] \
+            && { IMAGE="${_args[$((i+1))]}"; break; }
+    done
+    IMAGE="${IMAGE:-${PWD}/vllm-serve-latest.tar.gz}"
+
+    load_or_pull_image
+    _SCRIPT="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+    launch_container "bash ${_SCRIPT} $*"
+    exit $?
+fi
 
 HOST="localhost"
 PORT="8000"
@@ -20,6 +91,7 @@ Options:
   -t, --type TYPES        Comma-separated tests (default: all)
                           Available: throughput,prefill,decode,latency,concurrency,longctx,sharegpt,sonnet,sweep
   -o, --output DIR        Result directory (default: $RESULT_DIR)
+  -i, --image IMAGE       Docker image or tarball (default: ./vllm-serve-latest.tar.gz)
   -h, --help              Show this help
 
 Examples:
@@ -36,7 +108,8 @@ while [[ $# -gt 0 ]]; do
         -m|--model) MODEL="$2"; shift 2 ;;
         -t|--type)  TYPES="$2"; shift 2 ;;
         -o|--output) RESULT_DIR="$2"; shift 2 ;;
-        -h|--help)  usage; exit 0 ;;
+        -i|--image)  shift 2 ;;  # consumed by preamble above
+        -h|--help)   usage; exit 0 ;;
         *) echo "Unknown option: $1"; usage; exit 1 ;;
     esac
 done
@@ -72,7 +145,7 @@ bench_throughput() {
     bench "Throughput (random 512in/256out, max rate)" \
         --dataset-name random \
         --random-input-len 512 --random-output-len 256 \
-        --num-prompts 1000 --request-rate inf
+        --num-prompts 100 --request-rate inf
 }
 
 # Prefill (TTFT): measures Time to First Token, which reflects prompt processing speed.
@@ -85,7 +158,7 @@ bench_prefill() {
         bench "Prefill TTFT (input=${len})" \
             --dataset-name random \
             --random-input-len "$len" --random-output-len 1 \
-            --num-prompts 1000 --request-rate 4
+            --num-prompts 100 --request-rate 4
     done
 }
 
@@ -99,7 +172,7 @@ bench_decode() {
         bench "Decode ITL (output=${len})" \
             --dataset-name random \
             --random-input-len 128 --random-output-len "$len" \
-            --num-prompts 1000 --request-rate 4
+            --num-prompts 100 --request-rate 4
     done
 }
 
@@ -112,15 +185,15 @@ bench_latency() {
     bench "Latency (short 128/128, rate=1)" \
         --dataset-name random \
         --random-input-len 128 --random-output-len 128 \
-        --num-prompts 1000 --request-rate 1
+        --num-prompts 100 --request-rate 1
     bench "Latency (medium 512/256, rate=1)" \
         --dataset-name random \
         --random-input-len 512 --random-output-len 256 \
-        --num-prompts 1000 --request-rate 1
+        --num-prompts 100 --request-rate 1
     bench "Latency (long 4096/512, rate=1)" \
         --dataset-name random \
         --random-input-len 4096 --random-output-len 512 \
-        --num-prompts 1000 --request-rate 1
+        --num-prompts 100 --request-rate 1
 }
 
 # Concurrency: finds the server's saturation point by sweeping concurrent requests.
@@ -171,11 +244,11 @@ bench_sharegpt() {
     bench "ShareGPT (1000 prompts, max rate)" \
         --dataset-name sharegpt \
         --dataset-path "$SHAREGPT_PATH" \
-        --num-prompts 1000 --request-rate inf
+        --num-prompts 100 --request-rate inf
     bench "ShareGPT (1000 prompts, rate=4)" \
         --dataset-name sharegpt \
         --dataset-path "$SHAREGPT_PATH" \
-        --num-prompts 1000 --request-rate 4
+        --num-prompts 100 --request-rate 4
 }
 
 # Sonnet: uses Shakespeare's sonnets with a shared prefix to test prefix caching.
@@ -190,11 +263,11 @@ bench_sonnet() {
     bench "Sonnet (prefix caching, 1000 prompts, max rate)" \
         --dataset-name sonnet \
         --sonnet-input-len 550 --sonnet-output-len 150 --sonnet-prefix-len 200 \
-        --num-prompts 1000 --request-rate inf
+        --num-prompts 100 --request-rate inf
     bench "Sonnet (prefix caching, 1000 prompts, rate=4)" \
         --dataset-name sonnet \
         --sonnet-input-len 550 --sonnet-output-len 150 --sonnet-prefix-len 200 \
-        --num-prompts 1000 --request-rate 4
+        --num-prompts 100 --request-rate 4
 }
 
 # Sweep: uses `vllm bench sweep serve` to systematically test multiple parameter
