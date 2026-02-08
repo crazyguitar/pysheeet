@@ -270,6 +270,33 @@ for detailed explanations of each benchmark type and metric.
 Notes and Limitations
 ---------------------
 
+**Profiling:**
+
+vLLM supports PyTorch profiler tracing via ``--profiler-config``. The server must be
+started with profiling enabled, then the benchmark client triggers ``/start_profile``
+and ``/stop_profile`` endpoints via ``--profile``.
+
+.. code-block:: bash
+
+    # Server — start with profiling enabled (default writes to $PWD/vllm_profile)
+    bash run.sbatch --profile \
+      Qwen/Qwen3-30B-A3B-FP8 \
+      --tensor-parallel-size 8
+
+    # Server — custom profiler config
+    bash run.sbatch \
+      --profiler-config '{"profiler": "torch", "torch_profiler_dir": "/fsx/traces"}' \
+      Qwen/Qwen3-30B-A3B-FP8 \
+      --tensor-parallel-size 8
+
+    # Client — run benchmark with profiling
+    bash bench.sh -H 10.0.128.193 --type throughput --profile
+
+View traces at https://ui.perfetto.dev/ (supports ``.gz`` files directly).
+
+See the `vLLM Profiling Guide <https://docs.vllm.ai/en/latest/contributing/profiling/>`_
+for more details.
+
 **Parallelism constraints:**
 
 - vLLM does not support combining PP, TP, and DP simultaneously. When using PP mode,
