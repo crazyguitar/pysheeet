@@ -207,7 +207,7 @@ bench_concurrency() {
         bench "Concurrency=${c} (512in/256out)" \
             --dataset-name random \
             --random-input-len 512 --random-output-len 256 \
-            --num-prompts 500 --request-rate inf --max-concurrency "$c"
+            --num-prompts 100 --request-rate inf --max-concurrency "$c"
     done
 }
 
@@ -305,7 +305,7 @@ PARAMS
         --endpoint /v1/chat/completions
         --dataset-name random
         --random-input-len 512 --random-output-len 256
-        --num-prompts 500 --seed "$SEED"
+        --num-prompts 100 --seed "$SEED"
     )
     echo "==> Sweep (vllm bench sweep serve)"
     vllm bench sweep serve \
