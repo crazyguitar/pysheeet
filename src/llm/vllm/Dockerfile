@@ -1,4 +1,4 @@
-ARG VLLM_VERSION=0.15.0
+ARG VLLM_VERSION=0.15.1
 ARG CUDA_VERSION=12.8.1
 ARG GDRCOPY_VERSION=v2.5.1
 ARG EFA_INSTALLER_VERSION=1.46.0
@@ -189,6 +189,16 @@ ENV NVSHMEM_DISABLE_CUDA_VMM=1
 
 # Install vLLM
 RUN pip3 install --no-cache-dir vllm==${VLLM_VERSION}
+
+# Install Nsight Systems for profiling
+RUN apt-get update -y && apt-get install -y --no-install-recommends gnupg \
+    && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/3bf863cc.pub \
+    && echo "deb https://developer.download.nvidia.com/devtools/repos/ubuntu2404/$(dpkg --print-architecture) /" \
+       > /etc/apt/sources.list.d/nvidia-devtools.list \
+    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F60F4B3D7FA2AF80 \
+    && apt-get update -y \
+    && apt-get install -y --no-install-recommends nsight-systems-cli \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install DeepGEMM (requires torch from vLLM)
 RUN git clone --recursive -b v2.1.1.post3 https://github.com/deepseek-ai/DeepGEMM.git /tmp/deepgemm \

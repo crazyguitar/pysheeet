@@ -294,3 +294,40 @@ All benchmarks report these metrics via ``vllm bench serve``:
   workloads.
 
 Results are saved as JSON files in the ``--result-dir`` directory (default: ``./results``).
+
+Profiling
+---------
+
+vLLM supports PyTorch profiler tracing for analyzing GPU kernel performance. The server
+must be started with ``--profiler-config`` to register the ``/start_profile`` and
+``/stop_profile`` endpoints. The benchmark client triggers profiling via ``--profile``.
+
+**Server setup** — start with profiling enabled:
+
+.. code-block:: bash
+
+    # Using run.sbatch with default config (writes to $PWD/vllm_profile)
+    bash run.sbatch --profile \
+      Qwen/Qwen3-30B-A3B-FP8 \
+      --tensor-parallel-size 8
+
+    # Or pass --profiler-config directly to vllm serve
+    vllm serve Qwen/Qwen3-30B-A3B-FP8 \
+      --profiler-config '{"profiler": "torch", "torch_profiler_dir": "./vllm_profile"}'
+
+**Client** — run benchmark with profiling:
+
+.. code-block:: bash
+
+    bash bench.sh -H 10.0.128.193 --type throughput --profile
+
+**Viewing traces** — open https://ui.perfetto.dev/ and drag the ``.gz`` trace files
+directly into it (no need to decompress).
+
+.. note::
+
+    - Only send a few requests when profiling — trace files can get very large.
+    - NVIDIA Nsight Systems (``nsys``) is also available in the Docker image for
+      deeper GPU profiling. See the `vLLM Profiling Guide`_ for details.
+
+.. _vLLM Profiling Guide: https://docs.vllm.ai/en/latest/contributing/profiling/
