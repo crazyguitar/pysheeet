@@ -190,3 +190,9 @@ requests to interact with the OpenAI-compatible API:
 
     # Or run the included test script
     bash test.sh
+
+    # Test against a remote server
+    bash test.sh -H 10.0.128.193
+
+    # Test with specific port and model
+    bash test.sh -H 10.0.128.193 -p 8000 -m Qwen/Qwen3-30B-A3B-FP8
