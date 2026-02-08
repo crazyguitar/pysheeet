@@ -20,11 +20,16 @@ while (( "$#" )); do
     --container-mount)  CONTAINER_MOUNT="$2"; shift 2 ;;
     --workspace|-w)     WORKSPACE="$2"; shift 2 ;;
     --force|-f)         FORCE_PULL=true; shift ;;
+    --profile)          SERVE_ARGS+=(--profiler-config "{\"profiler\": \"torch\", \"torch_profiler_dir\": \"${PWD}/vllm_profile\"}"); shift ;;
+    --profiler-config)  SERVE_ARGS+=(--profiler-config "$2"); shift 2 ;;
     *)                  SERVE_ARGS+=("$1"); shift ;;
   esac
 done
 IMAGE="${IMAGE:-${WORKSPACE}/vllm-serve-latest.tar.gz}"
 LOGDIR="${WORKSPACE}/logs"
+
+# Build a shell-safe string from SERVE_ARGS for nested bash -c / docker exec
+SERVE_ARGS_STR=$(printf '%q ' "${SERVE_ARGS[@]+"${SERVE_ARGS[@]}"}")
 
 # Peek at SERVE_ARGS to extract values needed for topology computation
 _peek_arg() {
@@ -206,7 +211,7 @@ start_vllm_ray() {
   local extra="--host 0.0.0.0 --port 8000 --data-parallel-backend ray --data-parallel-address ${HEAD_IP} --data-parallel-size ${DP}"
 
   srun --nodes=1 --nodelist="${HEAD_NODE}" bash -c \
-    "docker exec -d ray-head bash -c 'vllm serve ${SERVE_ARGS[*]} ${extra} 2>&1 | tee ${logfile}'"
+    "docker exec -d ray-head bash -c 'vllm serve ${SERVE_ARGS_STR} ${extra} 2>&1 | tee ${logfile}'"
 }
 
 start_vllm_mp() {
@@ -225,11 +230,11 @@ start_vllm_mp() {
 
   for i in $(seq 1 $((NUM_NODES - 1))); do
     srun --nodes=1 --nodelist="${NODES[$i]}" bash -c \
-      "docker exec -d vllm-node-${i} bash -c 'vllm serve ${SERVE_ARGS[*]} ${extra} --node-rank ${i} --headless 2>&1 | tee ${logfile}.node${i}'"
+      "docker exec -d vllm-node-${i} bash -c 'vllm serve ${SERVE_ARGS_STR} ${extra} --node-rank ${i} --headless 2>&1 | tee ${logfile}.node${i}'"
   done
 
   srun --nodes=1 --nodelist="${HEAD_NODE}" bash -c \
-    "docker exec -d vllm-node-0 bash -c 'vllm serve ${SERVE_ARGS[*]} ${extra} --node-rank 0 2>&1 | tee ${logfile}'"
+    "docker exec -d vllm-node-0 bash -c 'vllm serve ${SERVE_ARGS_STR} ${extra} --node-rank 0 2>&1 | tee ${logfile}'"
 }
 
 # =============================================================================
@@ -257,14 +262,14 @@ start_vllm_rpc() {
     local start_rank=$((i * DP_LOCAL))
     info "Starting RPC worker on ${NODES[$i]} (rank ${start_rank})..."
     srun --nodes=1 --nodelist="${NODES[$i]}" bash -c "
-      docker exec -d vllm-worker bash -c 'vllm serve ${SERVE_ARGS[*]} ${extra} \
+      docker exec -d vllm-worker bash -c 'vllm serve ${SERVE_ARGS_STR} ${extra} \
         --data-parallel-start-rank ${start_rank} --headless \
         2>&1 | tee ${LOGDIR}/vllm_worker_${SLURM_JOB_ID}_${i}.log'
     "
   done
 
   srun --nodes=1 --nodelist="${HEAD_NODE}" bash -c "
-    docker exec -d vllm-head bash -c 'vllm serve ${SERVE_ARGS[*]} ${extra} \
+    docker exec -d vllm-head bash -c 'vllm serve ${SERVE_ARGS_STR} ${extra} \
       --host 0.0.0.0 --port 8000 \
       2>&1 | tee ${logfile}'
   "

@@ -78,6 +78,7 @@ PORT="8000"
 MODEL=""
 SEED="42"
 RESULT_DIR="./results"
+PROFILE=""
 TYPES="throughput,prefill,decode,latency,concurrency,longctx,sharegpt,sonnet"
 
 usage() {
@@ -92,12 +93,14 @@ Options:
                           Available: throughput,prefill,decode,latency,concurrency,longctx,sharegpt,sonnet
   -o, --output DIR        Result directory (default: $RESULT_DIR)
   -i, --image IMAGE       Docker image or tarball (default: ./vllm-serve-latest.tar.gz)
+  --profile               Enable PyTorch profiler (server must have --profiler-config set)
   -h, --help              Show this help
 
 Examples:
   $(basename "$0") -H 10.0.128.193
   $(basename "$0") -H 10.0.128.193 --type throughput,prefill
   $(basename "$0") -H 10.0.128.193 --type latency -m Qwen/Qwen3-30B-A3B-FP8
+  $(basename "$0") -H 10.0.128.193 --type throughput --profile
 EOF
 }
 
@@ -109,6 +112,7 @@ while [[ $# -gt 0 ]]; do
         -t|--type)  TYPES="$2"; shift 2 ;;
         -o|--output) RESULT_DIR="$2"; shift 2 ;;
         -i|--image)  shift 2 ;;  # consumed by preamble above
+        --profile)   PROFILE="--profile"; shift ;;
         -h|--help)   usage; exit 0 ;;
         *) echo "Unknown option: $1"; usage; exit 1 ;;
     esac
@@ -119,6 +123,11 @@ if [[ -z "$MODEL" ]]; then
     MODEL=$(curl -s "${BASE_URL}/v1/models" | python3 -c "import sys,json; print(json.load(sys.stdin)['data'][0]['id'])")
 fi
 mkdir -p "$RESULT_DIR"
+
+if [[ -n "$PROFILE" ]]; then
+    info "Profiling enabled (server must have --profiler-config set)"
+    info "View traces at https://ui.perfetto.dev/"
+fi
 
 bench() {
     local label="$1"; shift
@@ -131,6 +140,7 @@ bench() {
         --seed "$SEED" \
         --save-result \
         --result-dir "$RESULT_DIR" \
+        $PROFILE \
         "$@"
     echo ""
 }
