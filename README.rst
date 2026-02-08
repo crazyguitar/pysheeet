@@ -151,6 +151,7 @@ LLM inference and serving.
 - `PyTorch <docs/notes/llm/pytorch.rst>`_ - Tensors, autograd, neural networks, training loops
 - `Distributed Training <docs/notes/llm/distributed.rst>`_ - Multi-GPU training, DDP, FSDP, DeepSpeed
 - `vLLM Serving <docs/notes/llm/vllm-serving.rst>`_ - Production LLM inference with tensor/pipeline/data parallelism
+- `vLLM Benchmark <docs/notes/llm/vllm-bench.rst>`_ - Benchmark suite for measuring vLLM serving performance
 
 
 HPC

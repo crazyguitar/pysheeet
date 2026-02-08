@@ -15,3 +15,4 @@ LLM inference and serving.
    pytorch
    distributed
    vllm-serving
+   vllm-bench

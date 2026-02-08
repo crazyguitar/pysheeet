@@ -197,6 +197,25 @@ requests to interact with the OpenAI-compatible API:
     # Test with specific port and model
     bash test.sh -H 10.0.128.193 -p 8000 -m Qwen/Qwen3-30B-A3B-FP8
 
+Benchmark
+---------
+
+``bench.sh`` measures serving performance (throughput, TTFT, ITL, latency) by sending
+requests to a running vLLM server. It handles Docker image loading and container
+management automatically.
+
+.. code-block:: bash
+
+    # Run all benchmarks
+    bash bench.sh -H 10.0.128.193 -i vllm-serve:latest
+
+    # Run specific benchmarks
+    bash bench.sh -H 10.0.128.193 -i vllm-serve:latest --type throughput,prefill
+
+    # Via Makefile
+    make bench HOST=10.0.128.193
+    make bench HOST=10.0.128.193 BENCH_TYPE=throughput,prefill
+
 Notes and Limitations
 ---------------------
 
