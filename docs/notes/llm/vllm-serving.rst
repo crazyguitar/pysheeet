@@ -196,3 +196,55 @@ on your DP and TP configuration.
     # EP is computed automatically: EP = DP × TP
     # With TP=8, EP=8, each GPU holds 1/8 of the experts
     # All-to-all communication routes tokens to the right experts
+
+Distributed Serving on SLURM
+----------------------------
+
+For production deployments on HPC clusters, vLLM can be launched across multiple SLURM
+nodes using ``run.sbatch``. This script automates the full lifecycle of multi-node
+serving: distributing Docker images to all nodes, launching GPU-enabled containers with
+EFA networking, starting vLLM workers with the correct parallelism configuration, and
+keeping the server running until manually stopped.
+
+Unlike single-node serving where all GPUs share memory and communicate over NVLink,
+multi-node serving requires high-speed inter-node communication (EFA/RDMA) for
+operations like all-reduce (TP), pipeline stage transfers (PP), and expert routing
+(EP). The script handles all of this transparently — you just specify the model and
+parallelism settings, and it computes DP, selects the appropriate backend (RPC, Ray,
+or multiprocessing), and orchestrates the cluster.
+
+**Basic usage** — allocate nodes, then launch:
+
+.. code-block:: bash
+
+    # Allocate 2 nodes with 8 GPUs each
+    salloc -N 2 --gpus-per-node=8 --exclusive
+
+    # Serve a MoE model with expert parallelism (TP=8, DP=2, EP=16)
+    bash run.sbatch \
+      Qwen/Qwen3-30B-A3B-FP8 \
+      --tensor-parallel-size 8 \
+      --enable-expert-parallel
+
+    # Serve a dense model with pipeline parallelism (TP=8, PP=2)
+    bash run.sbatch \
+      deepseek-ai/DeepSeek-V2-Lite \
+      --tensor-parallel-size 8 \
+      --pipeline-parallel-size 2
+
+The server prints the head node IP when ready. Query it with any OpenAI-compatible
+client:
+
+.. code-block:: bash
+
+    curl http://<HEAD_IP>:8000/v1/chat/completions \
+      -H "Content-Type: application/json" \
+      -d '{
+        "model": "Qwen/Qwen3-30B-A3B-FP8",
+        "messages": [{"role": "user", "content": "Hello"}],
+        "max_tokens": 50
+      }'
+
+For the full list of script flags, backend selection, Docker image options, and
+additional examples, see the
+`vLLM README <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/vllm/README.rst>`_.
