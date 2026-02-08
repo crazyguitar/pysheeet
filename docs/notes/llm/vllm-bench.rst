@@ -19,7 +19,10 @@ The script handles Docker image loading and container management automatically. 
 registry) and re-executes itself inside the container. When running under a SLURM
 allocation, it uses ``srun`` to dispatch to the compute node.
 
-Source: `bench.sh <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/vllm/bench.sh>`_
+Source: `bench.sh`_, `run.sbatch`_
+
+.. _bench.sh: https://github.com/crazyguitar/pysheeet/blob/master/src/llm/vllm/bench.sh
+.. _run.sbatch: https://github.com/crazyguitar/pysheeet/blob/master/src/llm/vllm/run.sbatch
 
 Quick Start
 -----------
@@ -32,7 +35,16 @@ script auto-detects the model from the server and handles Docker image loading i
 
 .. code-block:: bash
 
+    # Single node
     vllm serve Qwen/Qwen2.5-7B-Instruct --host 0.0.0.0 --port 8000
+
+    # Multi-node on SLURM (allocate 2 nodes, serve MoE model with EP)
+    # See run.sbatch_ for full options
+    salloc -N 2 --gpus-per-node=8 --exclusive
+    bash run.sbatch \
+      Qwen/Qwen3-30B-A3B-FP8 \
+      --tensor-parallel-size 8 \
+      --enable-expert-parallel
 
 **Terminal 2** — run benchmarks against the server:
 
