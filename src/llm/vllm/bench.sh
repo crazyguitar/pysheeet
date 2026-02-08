@@ -7,7 +7,7 @@ PORT="8000"
 MODEL=""
 SEED="42"
 RESULT_DIR="./results"
-TYPES="throughput,prefill,decode,latency,concurrency,longctx,sharegpt,sonnet"
+TYPES="throughput,prefill,decode,latency,concurrency,longctx,sharegpt,sonnet,sweep"
 
 usage() {
     cat <<EOF
@@ -18,7 +18,7 @@ Options:
   -p, --port PORT         Server port (default: $PORT)
   -m, --model MODEL       Model name (auto-detected if omitted)
   -t, --type TYPES        Comma-separated tests (default: all)
-                          Available: throughput,prefill,decode,latency,concurrency,longctx,sharegpt,sonnet
+                          Available: throughput,prefill,decode,latency,concurrency,longctx,sharegpt,sonnet,sweep
   -o, --output DIR        Result directory (default: $RESULT_DIR)
   -h, --help              Show this help
 
@@ -197,6 +197,53 @@ bench_sonnet() {
         --num-prompts 1000 --request-rate 4
 }
 
+# Sweep: uses `vllm bench sweep serve` to systematically test multiple parameter
+# combinations. Unlike other benchmarks here, sweep manages its own server — it
+# starts/stops vllm serve for each combination defined in JSON param files.
+# Produces a CSV summary across all runs for easy comparison.
+# Ref: https://docs.vllm.ai/en/latest/benchmarking/sweeps/
+# Ref: github.com/vllm-project/vllm/blob/main/vllm/benchmarks/sweep/serve.py
+#
+# Requires bench_params.json in $RESULT_DIR, e.g.:
+#   [{"--request-rate": 1}, {"--request-rate": 4}, {"--request-rate": 16}]
+# Optional serve_params.json for server-side sweeps, e.g.:
+#   [{"--max-num-seqs": 128}, {"--max-num-seqs": 256}]
+bench_sweep() {
+    local bench_params="${RESULT_DIR}/bench_params.json"
+    local serve_params="${RESULT_DIR}/serve_params.json"
+    if [[ ! -f "$bench_params" ]]; then
+        echo "Sweep requires ${bench_params} — creating default (rate sweep)..."
+        cat > "$bench_params" <<'PARAMS'
+[
+  {"--request-rate": 1},
+  {"--request-rate": 4},
+  {"--request-rate": 8},
+  {"--request-rate": 16},
+  {"--request-rate": 32},
+  {"--request-rate": "inf"}
+]
+PARAMS
+    fi
+    local serve_flag=""
+    [[ -f "$serve_params" ]] && serve_flag="--serve-params ${serve_params}"
+    local bench_cmd=(
+        vllm bench serve
+        --model "$MODEL" --backend openai-chat
+        --endpoint /v1/chat/completions
+        --dataset-name random
+        --random-input-len 512 --random-output-len 256
+        --num-prompts 500 --seed "$SEED"
+    )
+    echo "==> Sweep (vllm bench sweep serve)"
+    vllm bench sweep serve \
+        --serve-cmd "vllm serve ${MODEL}" \
+        --bench-cmd "${bench_cmd[*]}" \
+        --bench-params "$bench_params" \
+        ${serve_flag} \
+        --num-runs 1 \
+        -o "$RESULT_DIR"
+}
+
 IFS=',' read -ra TESTS <<< "$TYPES"
 for t in "${TESTS[@]}"; do
     t=$(echo "$t" | xargs)  # trim whitespace
@@ -212,6 +259,7 @@ for t in "${TESTS[@]}"; do
         longctx)     bench_longctx ;;
         sharegpt)    bench_sharegpt ;;
         sonnet)      bench_sonnet ;;
-        *) echo "Unknown test: $t (available: throughput,prefill,decode,latency,concurrency,longctx,sweep,sharegpt,sonnet)"; exit 1 ;;
+        sweep)       bench_sweep ;;
+        *) echo "Unknown test: $t"; exit 1 ;;
     esac
 done
