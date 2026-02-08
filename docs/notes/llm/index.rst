@@ -6,8 +6,8 @@ LLM
 ===
 
 Large Language Models (LLM) training, inference, and optimization. Covers PyTorch
-for model development, distributed training across GPUs, and vLLM for high-performance
-LLM inference and serving.
+for model development, distributed training across GPUs, vLLM for high-performance
+LLM inference and serving, and benchmarking tools for measuring serving performance.
 
 .. toctree::
    :maxdepth: 1

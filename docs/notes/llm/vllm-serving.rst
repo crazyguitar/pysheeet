@@ -1,5 +1,5 @@
 .. meta::
-    :description lang=en: Complete vLLM serving guide — single-node, multi-node SLURM, Docker, Ray, RPC, tensor/pipeline/data/expert parallelism for production LLM inference on GPU clusters with EFA.
+    :description lang=en: vLLM serving guide — single-node, multi-node SLURM, Docker, Ray, RPC, tensor/pipeline/data/expert parallelism for LLM inference on GPU clusters.
     :keywords: vLLM, vLLM serving, vLLM tutorial, LLM inference, LLM serving, model serving, distributed inference, Ray cluster, RPC backend, tensor parallelism, pipeline parallelism, data parallelism, expert parallelism, MoE serving, GPU inference, OpenAI compatible API, multi-node GPU, multi-GPU serving, SLURM, HPC, EFA, NCCL, PagedAttention, continuous batching, Docker, production deployment, Qwen, Llama, DeepSeek
 
 ============
