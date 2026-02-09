@@ -1,6 +1,6 @@
 .. meta::
-    :description lang=en: LLM serving guide — vLLM and SGLang for single-node, multi-node SLURM, tensor/pipeline/data/expert parallelism on GPU clusters.
-    :keywords: vLLM, SGLang, LLM serving, LLM inference, model serving, distributed inference, tensor parallelism, pipeline parallelism, data parallelism, expert parallelism, MoE serving, GPU inference, OpenAI compatible API, multi-node GPU, SLURM, HPC, EFA, NCCL, PagedAttention, RadixAttention, continuous batching, Docker, Qwen, Llama, DeepSeek
+    :description lang=en: LLM serving guide — vLLM, SGLang, and TensorRT-LLM for single-node, multi-node SLURM, tensor/pipeline/data/expert parallelism on GPU clusters.
+    :keywords: vLLM, SGLang, TensorRT-LLM, LLM serving, LLM inference, model serving, distributed inference, tensor parallelism, pipeline parallelism, data parallelism, expert parallelism, MoE serving, GPU inference, OpenAI compatible API, multi-node GPU, SLURM, HPC, EFA, NCCL, PagedAttention, RadixAttention, continuous batching, Docker, Qwen, Llama, DeepSeek
 
 ===========
 LLM Serving
@@ -9,7 +9,7 @@ LLM Serving
 .. contents:: Table of Contents
     :backlinks: none
 
-This guide covers LLM inference serving with two high-performance engines:
+This guide covers LLM inference serving with three high-performance engines:
 
 - **vLLM** — High-throughput inference engine with PagedAttention for efficient KV cache
   memory management, continuous batching for maximizing GPU utilization, and optimized
@@ -20,7 +20,11 @@ This guide covers LLM inference serving with two high-performance engines:
   across requests with shared prompts. Optimized for multi-turn conversations and
   workloads with common system prompts.
 
-Both support distributed inference across multiple GPUs and nodes with tensor parallelism
+- **TensorRT-LLM** — NVIDIA's inference engine with PyTorch backend, optimized CUDA
+  kernels, and FP8/INT4 quantization. Uses ``trtllm-serve`` for OpenAI-compatible
+  serving. Supports TP, PP, EP, and attention DP via YAML config.
+
+All support distributed inference across multiple GPUs and nodes with tensor parallelism
 (TP), pipeline parallelism (PP), data parallelism (DP), and expert parallelism (EP) for
 Mixture-of-Experts (MoE) models. This guide covers everything from basic single-GPU
 deployment to advanced multi-node distributed serving on SLURM clusters.
@@ -29,6 +33,7 @@ Scripts and examples:
 
 - vLLM: `src/llm/vllm/ <https://github.com/crazyguitar/pysheeet/tree/master/src/llm/vllm>`_
 - SGLang: `src/llm/sglang/ <https://github.com/crazyguitar/pysheeet/tree/master/src/llm/sglang>`_
+- TensorRT-LLM: `src/llm/tensorrt-llm/ <https://github.com/crazyguitar/pysheeet/tree/master/src/llm/tensorrt-llm>`_
 
 Quick Start
 -----------
@@ -59,6 +64,17 @@ HTTP requests. Both engines expose OpenAI-compatible ``/v1/chat/completions`` an
       -H "Content-Type: application/json" \
       -d '{"model": "Qwen/Qwen2.5-7B-Instruct", "messages": [{"role": "user", "content": "Hello"}], "max_tokens": 50}'
 
+**TensorRT-LLM** (port 8000):
+
+.. code-block:: bash
+
+    pip install tensorrt-llm
+    trtllm-serve Qwen/Qwen2.5-7B-Instruct --host 0.0.0.0 --port 8000
+
+    curl -X POST http://localhost:8000/v1/chat/completions \
+      -H "Content-Type: application/json" \
+      -d '{"model": "Qwen/Qwen2.5-7B-Instruct", "messages": [{"role": "user", "content": "Hello"}], "max_tokens": 50}'
+
 Tensor Parallel (TP)
 --------------------
 
@@ -76,6 +92,9 @@ GPU's memory.
 
     # SGLang
     python -m sglang.launch_server --model-path Qwen/Qwen2.5-14B-Instruct --tp 8
+
+    # TensorRT-LLM
+    trtllm-serve Qwen/Qwen2.5-14B-Instruct --tp_size 8
 
 Pipeline Parallel (PP)
 ----------------------
@@ -96,6 +115,9 @@ slower interconnects.
     # SGLang
     python -m sglang.launch_server --model-path Qwen/Qwen2.5-14B-Instruct --tp 4 --pp 2
 
+    # TensorRT-LLM
+    trtllm-serve Qwen/Qwen2.5-14B-Instruct --tp_size 4 --pp_size 2
+
 Data Parallel (DP)
 ------------------
 
@@ -114,6 +136,9 @@ tensor parallelism internally.
     # SGLang: multi-node DP requires --enable-dp-attention
     python -m sglang.launch_server --model-path Qwen/Qwen2.5-14B-Instruct --tp 8 --dp 2 --enable-dp-attention
 
+    # TensorRT-LLM: DP via multi-node with TP=8 per node
+    trtllm-serve Qwen/Qwen2.5-14B-Instruct --tp_size 8
+
 Expert Parallel (EP)
 --------------------
 
@@ -127,6 +152,9 @@ of experts.
 **SGLang:** EP is a subdivision of TP. With ``--tp 8 --ep 2``, the 8 TP GPUs split into
 2 expert groups of 4 GPUs each.
 
+**TensorRT-LLM:** EP subdivides TP (same as SGLang). With ``--tp_size 8 --ep_size 2``,
+experts are sharded across 2 groups of 4 GPUs.
+
 .. code-block:: bash
 
     # vLLM: EP auto-computed
@@ -134,6 +162,9 @@ of experts.
 
     # SGLang: EP subdivides TP
     python -m sglang.launch_server --model-path Qwen/Qwen1.5-MoE-A2.7B --tp 8 --ep 2
+
+    # TensorRT-LLM: EP subdivides TP
+    trtllm-serve Qwen/Qwen1.5-MoE-A2.7B --tp_size 8 --ep_size 2
 
 Parallelism Formulas
 --------------------
@@ -151,6 +182,8 @@ Expert parallelism (EP) is handled differently:
 - **SGLang**: EP explicitly subdivides TP. For example, ``--tp 8 --ep 2`` splits the 8 TP
   GPUs into 2 expert groups of 4 GPUs each. Each group handles different experts while
   all 8 GPUs still perform tensor parallelism for non-expert layers.
+- **TensorRT-LLM**: EP subdivides TP (same as SGLang). ``--tp_size 8 --ep_size 2`` splits
+  experts across 2 groups. Constraint: ``moe_tp × ep = tp_size``.
 
 Distributed Serving on SLURM
 ----------------------------
@@ -184,7 +217,20 @@ checking. The server runs until you stop it with ``Ctrl+C`` or ``scancel``.
     # MoE with expert parallelism (TP=8, EP=2 across 2 nodes)
     bash run.sbatch --model-path Qwen/Qwen1.5-MoE-A2.7B --tp 8 --ep 2
 
+**TensorRT-LLM:**
+
+.. code-block:: bash
+
+    salloc -N 2 --gpus-per-node=8 --exclusive
+
+    # MoE with expert parallelism
+    bash run.sbatch /path/to/Qwen1.5-MoE-A2.7B --tp_size 8 --ep_size 2
+
+    # Dense model
+    bash run.sbatch /path/to/Qwen2.5-14B-Instruct --tp_size 8
+
 See the READMEs for full script options:
 
 - `vLLM README <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/vllm/README.rst>`_
 - `SGLang README <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/sglang/README.rst>`_
+- `TensorRT-LLM README <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/tensorrt-llm/README.rst>`_

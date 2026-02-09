@@ -1,6 +1,6 @@
 .. meta::
-    :description lang=en: LLM benchmark suite — measure throughput, TTFT, ITL, latency for vLLM and SGLang serving performance.
-    :keywords: LLM benchmark, vLLM benchmark, SGLang benchmark, serving benchmark, throughput, latency, TTFT, time to first token, ITL, inter-token latency, prefill, decode, concurrency, ShareGPT, GPU benchmark, tokens per second
+    :description lang=en: LLM benchmark suite — measure throughput, TTFT, ITL, latency for vLLM, SGLang, and TensorRT-LLM serving performance.
+    :keywords: LLM benchmark, vLLM benchmark, SGLang benchmark, TensorRT-LLM benchmark, serving benchmark, throughput, latency, TTFT, time to first token, ITL, inter-token latency, prefill, decode, concurrency, ShareGPT, GPU benchmark, tokens per second
 
 =============
 LLM Benchmark
@@ -9,12 +9,13 @@ LLM Benchmark
 .. contents:: Table of Contents
     :backlinks: none
 
-Benchmark suites for measuring LLM serving performance with vLLM and SGLang. Both use
-similar methodology — same test categories, workloads, and metrics — for easy comparison
-between the two inference engines.
+Benchmark suites for measuring LLM serving performance with vLLM, SGLang, and
+TensorRT-LLM. All use similar methodology — same test categories, workloads, and
+metrics — for easy comparison between the three inference engines.
 
 - **vLLM:** ``vllm bench serve`` via `bench.sh <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/vllm/bench.sh>`_
 - **SGLang:** ``python -m sglang.bench_serving`` via `bench.sh <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/sglang/bench.sh>`_
+- **TensorRT-LLM:** ``python -m tensorrt_llm.serve.scripts.benchmark_serving`` via `bench.sh <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/tensorrt-llm/bench.sh>`_
 
 The scripts handle Docker image loading and container management automatically. If the
 CLI is not available on the host, they load the Docker image and re-execute inside the
@@ -48,6 +49,17 @@ auto-detects the model from the server.
     # Terminal 2: run benchmarks
     bash bench.sh -H localhost -i sglang-serve:latest
     bash bench.sh -H localhost --type throughput,prefill
+
+**TensorRT-LLM:**
+
+.. code-block:: bash
+
+    # Terminal 1: start server
+    trtllm-serve /path/to/Qwen2.5-7B-Instruct --host 0.0.0.0 --port 8000
+
+    # Terminal 2: run benchmarks (requires -m for tokenizer loading)
+    bash bench.sh -H localhost -m /path/to/Qwen2.5-7B-Instruct -i tensorrt-llm-serve:latest
+    bash bench.sh -H localhost -m /path/to/Qwen2.5-7B-Instruct --type throughput,prefill
 
 Throughput
 ----------
@@ -168,21 +180,34 @@ CLI Differences
 ---------------
 
 .. list-table::
-   :widths: 30 35 35
+   :widths: 20 27 27 26
    :header-rows: 1
 
    * - Parameter
      - vLLM
      - SGLang
+     - TensorRT-LLM
    * - Input length
      - ``--random-input-len``
      - ``--random-input``
+     - ``--random-input-len``
    * - Output length
      - ``--random-output-len``
      - ``--random-output``
+     - ``--random-output-len``
    * - Max rate
      - ``--request-rate inf``
      - ``--request-rate inf``
+     - ``--max-concurrency``
+   * - Random dataset
+     - (works by default)
+     - (works by default)
+     - ``--random-ids --random-prefix-len 0``
+   * - Model flag
+     - auto-detected
+     - auto-detected
+     - ``-m`` required (tokenizer)
    * - Results
      - ``--result-dir ./results``
      - ``--output-file ./results/out.json``
+     - ``--result-dir ./results``
