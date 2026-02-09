@@ -28,8 +28,8 @@ coding faster, easier, and more enjoyable. You can explore all the cheat sheets 
 `Pysheeet <https://www.pythonsheets.com/>`_. Contributions are always welcome—feel
 free to fork the repo and submit a pull request to help it grow!
 
-Skills Integration
-==================
+/py Skill
+=========
 
 **pysheeet** includes Claude Skills integration for intelligent access to Python cheat sheets directly within Claude Code and Claude.ai.
 
