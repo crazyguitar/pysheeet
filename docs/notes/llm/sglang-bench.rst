@@ -153,14 +153,3 @@ Realistic conversational workload from real user conversations.
 ShareGPT captures the natural distribution of short and long prompts from actual
 conversations, making it the best proxy for production chat traffic. The dataset
 is auto-downloaded if not present locally.
-
-Key Metrics
------------
-
-- **TTFT** (Time to First Token): Time from request arrival to first generated token.
-  Dominated by prefill compute.
-- **ITL** (Inter-Token Latency): Time between consecutive tokens. Reflects decode speed.
-- **E2E Latency**: Total time from request to completion.
-- **Throughput**: Output tokens/sec across all requests.
-
-Results are saved as JSON files in the ``--output`` directory (default: ``./results``).
