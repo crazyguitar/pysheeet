@@ -9,9 +9,15 @@ This cheat sheet provides quick-reference commands for launching a vLLM server i
 local (single-node) and SLURM (multi-node) environments. It covers building the Docker
 image, running with different parallelism strategies, and testing the server endpoints.
 
+For more details, see the
+`vLLM documentation <https://docs.vllm.ai/>`_ and
+`GitHub repository <https://github.com/vllm-project/vllm>`_.
+
 For detailed explanations of tensor parallelism, pipeline parallelism, data parallelism,
 and expert parallelism, see the
-`vLLM Serving Guide <https://github.com/crazyguitar/pysheeet/blob/master/docs/notes/llm/vllm-serving.rst>`_.
+For parallelism strategies and benchmark methodology, see the
+`LLM Serving Guide <https://github.com/crazyguitar/pysheeet/blob/master/docs/notes/llm/llm-serving.rst>`_ and
+`LLM Benchmark Guide <https://github.com/crazyguitar/pysheeet/blob/master/docs/notes/llm/llm-bench.rst>`_.
 
 Build Docker Image
 ------------------
@@ -264,7 +270,7 @@ through to ``vllm bench sweep serve``:
         --bench-cmd "vllm bench serve --model Qwen/Qwen3-30B-A3B-FP8 --dataset-name sharegpt" \
         --bench-params results/bench_params.json --show-stdout
 
-See the `vLLM Benchmark Guide <https://github.com/crazyguitar/pysheeet/blob/master/docs/notes/llm/vllm-bench.rst>`_
+See the `LLM Benchmark Guide <https://github.com/crazyguitar/pysheeet/blob/master/docs/notes/llm/llm-bench.rst>`_
 for detailed explanations of each benchmark type and metric.
 
 Notes and Limitations

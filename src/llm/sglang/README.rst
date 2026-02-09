@@ -9,6 +9,14 @@ This cheat sheet provides quick-reference commands for launching an SGLang serve
 both local (single-node) and SLURM (multi-node) environments. It covers building the
 Docker image, running with different parallelism strategies, and testing the server.
 
+For more details, see the
+`SGLang documentation <https://docs.sglang.ai/>`_ and
+`GitHub repository <https://github.com/sgl-project/sglang>`_.
+
+For parallelism strategies and benchmark methodology, see the
+`LLM Serving Guide <https://github.com/crazyguitar/pysheeet/blob/master/docs/notes/llm/llm-serving.rst>`_ and
+`LLM Benchmark Guide <https://github.com/crazyguitar/pysheeet/blob/master/docs/notes/llm/llm-bench.rst>`_.
+
 Build Docker Image
 ------------------
 

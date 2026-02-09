@@ -15,6 +15,10 @@ For more details, see the
 `TensorRT-LLM documentation <https://nvidia.github.io/TensorRT-LLM/>`_ and
 `GitHub repository <https://github.com/NVIDIA/TensorRT-LLM>`_.
 
+For parallelism strategies and benchmark methodology, see the
+`LLM Serving Guide <https://github.com/crazyguitar/pysheeet/blob/master/docs/notes/llm/llm-serving.rst>`_ and
+`LLM Benchmark Guide <https://github.com/crazyguitar/pysheeet/blob/master/docs/notes/llm/llm-bench.rst>`_.
+
 Build Docker Image
 ------------------
 
