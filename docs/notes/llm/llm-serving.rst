@@ -138,16 +138,27 @@ of experts.
 Parallelism Formulas
 --------------------
 
+Both engines use the same formula for computing total GPU requirements:
+
 .. code-block:: text
 
-    vLLM:   Total GPUs = TP × PP × DP,  EP = TP × DP (auto)
-    SGLang: Total GPUs = TP × PP × DP,  EP subdivides TP
+    Total GPUs = TP × PP × DP
+
+Expert parallelism (EP) is handled differently:
+
+- **vLLM**: EP is auto-computed (``EP = TP × DP``) when ``--enable-expert-parallel`` is set.
+  All GPUs in the world participate in expert parallelism automatically.
+- **SGLang**: EP explicitly subdivides TP. For example, ``--tp 8 --ep 2`` splits the 8 TP
+  GPUs into 2 expert groups of 4 GPUs each. Each group handles different experts while
+  all 8 GPUs still perform tensor parallelism for non-expert layers.
 
 Distributed Serving on SLURM
 ----------------------------
 
-Both engines provide ``run.sbatch`` scripts for multi-node deployment with Docker,
-EFA networking, and automatic coordination.
+For production deployments on HPC clusters, both engines provide ``run.sbatch`` scripts
+that automate multi-node serving. The scripts handle Docker image distribution to all
+nodes, container launch with EFA/GPU passthrough, worker coordination, and health
+checking. The server runs until you stop it with ``Ctrl+C`` or ``scancel``.
 
 **vLLM:**
 
