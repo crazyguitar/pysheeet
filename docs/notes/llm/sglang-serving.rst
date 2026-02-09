@@ -131,7 +131,7 @@ into EP expert-parallel groups.
     # TP=8 GPUs divided into EP=2 expert groups (4 GPUs per group)
     python -m sglang.launch_server \
       --model-path Qwen/Qwen1.5-MoE-A2.7B \
-      --tp 8 --ep-size 2 --enable-ep
+      --tp 8 --ep 2
 
 Parallelism Formula
 -------------------
@@ -142,7 +142,7 @@ SGLang's parallelism relationship:
 
     Total GPUs = TP × DP × PP
 
-**EP is a subdivision of TP**, not a separate multiplier. When using ``--ep-size N``,
+**EP is a subdivision of TP**, not a separate multiplier. When using ``--ep N``,
 the TP GPUs are divided into N expert-parallel groups.
 
 .. list-table::
@@ -214,7 +214,7 @@ launch with EFA networking, and multi-node coordination.
     # MoE with expert parallelism
     bash run.sbatch \
       --model-path Qwen/Qwen1.5-MoE-A2.7B \
-      --tp 8 --ep-size 2 --enable-ep
+      --tp 8 --ep 2
 
     # Data parallelism (requires --enable-dp-attention for multi-node)
     bash run.sbatch \

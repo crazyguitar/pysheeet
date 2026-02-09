@@ -41,7 +41,7 @@ inside a Docker container. The server exposes an OpenAI-compatible API on port 3
     python -m sglang.launch_server --model-path Qwen/Qwen2.5-14B-Instruct --tp 8
 
     # MoE model with expert parallelism (EP subdivides TP)
-    python -m sglang.launch_server --model-path Qwen/Qwen1.5-MoE-A2.7B --tp 8 --ep-size 2 --enable-ep
+    python -m sglang.launch_server --model-path Qwen/Qwen1.5-MoE-A2.7B --tp 8 --ep 2
 
 **Using Docker (via Makefile)**:
 
@@ -114,7 +114,7 @@ All other arguments are passed directly to ``python -m sglang.launch_server``.
     # TP=8, EP=2 (experts split into 2 groups within TP)
     bash run.sbatch \
       --model-path Qwen/Qwen1.5-MoE-A2.7B \
-      --tp 8 --ep-size 2 --enable-ep
+      --tp 8 --ep 2
 
 **Data parallelism** — requires ``--enable-dp-attention`` for multi-node:
 
@@ -222,7 +222,7 @@ SGLang's parallelism formula:
 
     Total GPUs = TP × DP × PP
 
-**EP is a subdivision of TP**, not a separate multiplier. When using ``--ep-size N``,
+**EP is a subdivision of TP**, not a separate multiplier. When using ``--ep N``,
 the TP GPUs are divided into N expert-parallel groups.
 
 .. list-table::
