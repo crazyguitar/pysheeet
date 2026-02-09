@@ -28,8 +28,34 @@ coding faster, easier, and more enjoyable. You can explore all the cheat sheets 
 `Pysheeet <https://www.pythonsheets.com/>`_. Contributions are always welcome—feel
 free to fork the repo and submit a pull request to help it grow!
 
+Skills Integration
+==================
 
-What’s New In Python 3
+**pysheeet** includes Claude Skills integration for intelligent access to Python cheat sheets directly within Claude Code and Claude.ai.
+
+Installation
+------------
+
+.. code-block:: bash
+
+    # Install globally for Claude Code
+    mkdir -p ~/.claude/skills
+    cp -r skills ~/.claude/skills/py
+
+Usage
+-----
+
+Once installed, simply ask Claude any Python question and the ``/py`` skill will automatically provide relevant examples and documentation from this cheat sheet collection.
+
+Examples:
+
+- "How do I create async HTTP clients?"
+- "Show me SQLAlchemy query patterns"
+- "Best practices for Python threading"
+- "Benchmark LLM serving with Slurm"
+
+
+What's New In Python 3
 ======================
 
 This part only provides a quick glance at some important features in Python 3.

@@ -25,6 +25,12 @@ If there is any question or suggestion, please create an issue on `GitHub Issues
 .. _fork pysheeet on GitHub: https://github.com/crazyguitar/pysheeet
 .. _GitHub Issues: https://github.com/crazyguitar/pysheeet/issues
 
+Skills Integration
+------------------
+
+**pysheeet** now includes **Claude Skills integration**. Get intelligent access to all cheat sheets directly within Claude Code and Claude.ai through our custom ``/py`` skill.
+For installation and setup instructions, see the main `README <https://github.com/crazyguitar/pysheeet/blob/master/README.rst>`_.
+
 What's New In Python 3
 ----------------------
 
