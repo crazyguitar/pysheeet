@@ -1,6 +1,6 @@
 .. meta::
     :description lang=en: Large Language Models (LLM) cheat sheet — PyTorch, distributed training, vLLM/SGLang serving, and benchmarking for GPU clusters.
-    :keywords: LLM, Large Language Models, PyTorch, vLLM, SGLang, distributed training, model inference, model serving, GPU optimization, CUDA, transformer models, LLM tutorial, LLM cheat sheet, vLLM tutorial, SGLang tutorial, vLLM benchmark
+    :keywords: LLM, Large Language Models, PyTorch, vLLM, SGLang, distributed training, model inference, model serving, GPU optimization, CUDA, transformer models, LLM tutorial, LLM cheat sheet
 
 LLM
 ===
@@ -15,7 +15,5 @@ serving performance.
 
    pytorch
    distributed
-   vllm-serving
-   vllm-bench
-   sglang-serving
-   sglang-bench
+   llm-serving
+   llm-bench

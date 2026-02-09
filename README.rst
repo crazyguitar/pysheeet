@@ -150,10 +150,8 @@ high-performance LLM inference and serving.
 
 - `PyTorch <docs/notes/llm/pytorch.rst>`_ - Tensors, autograd, neural networks, training loops
 - `Distributed Training <docs/notes/llm/distributed.rst>`_ - Multi-GPU training, DDP, FSDP, DeepSpeed
-- `vLLM Serving <docs/notes/llm/vllm-serving.rst>`_ - Production LLM inference with tensor/pipeline/data parallelism
-- `vLLM Benchmark <docs/notes/llm/vllm-bench.rst>`_ - Benchmark suite for measuring vLLM serving performance
-- `SGLang Serving <docs/notes/llm/sglang-serving.rst>`_ - LLM inference with RadixAttention and expert parallelism
-- `SGLang Benchmark <docs/notes/llm/sglang-bench.rst>`_ - Benchmark suite for measuring SGLang serving performance
+- `LLM Serving <docs/notes/llm/llm-serving.rst>`_ - vLLM and SGLang for production inference with TP/PP/DP/EP
+- `LLM Benchmark <docs/notes/llm/llm-bench.rst>`_ - Benchmark suite for measuring serving performance
 
 
 HPC

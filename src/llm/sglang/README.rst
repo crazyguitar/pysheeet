@@ -102,16 +102,7 @@ All other arguments are passed directly to ``python -m sglang.launch_server``.
     # Allocate 2 nodes with 8 GPUs each
     salloc -N 2 --gpus-per-node=8 --exclusive
 
-    # TP=16 across both nodes
-    bash run.sbatch \
-      --model-path Qwen/Qwen2.5-72B-Instruct \
-      --tp 16
-
-**MoE with expert parallelism**:
-
-.. code-block:: bash
-
-    # TP=8, EP=2 (experts split into 2 groups within TP)
+    # MoE with expert parallelism (TP=8, EP=2 across 2 nodes)
     bash run.sbatch \
       --model-path Qwen/Qwen1.5-MoE-A2.7B \
       --tp 8 --ep 2
@@ -141,7 +132,7 @@ All other arguments are passed directly to ``python -m sglang.launch_server``.
     bash run.sbatch \
       --image /fsx/images/sglang-serve-latest.tar.gz \
       --model-path Qwen/Qwen2.5-72B-Instruct \
-      --tp 16
+      --tp 8
 
 **Profiling**:
 
