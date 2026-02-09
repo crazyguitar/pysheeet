@@ -42,18 +42,9 @@ Installation
     mkdir -p ~/.claude/skills
     cp -r skills ~/.claude/skills/py
 
-Usage
------
-
-Once installed, simply ask Claude any Python question and the ``/py`` skill will automatically provide relevant examples and documentation from this cheat sheet collection.
-
-Examples:
-
-- "How do I create async HTTP clients?"
-- "Show me SQLAlchemy query patterns"
-- "Best practices for Python threading"
-- "Benchmark LLM serving with Slurm"
-
+    # Once installed, simply ask Claude any Python question and the ``/py``
+    # skill will automatically provide relevant examples and documentation
+    # from this cheat sheet collection.
 
 What's New In Python 3
 ======================
