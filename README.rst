@@ -153,6 +153,7 @@ high-performance LLM inference and serving.
 - `vLLM Serving <docs/notes/llm/vllm-serving.rst>`_ - Production LLM inference with tensor/pipeline/data parallelism
 - `vLLM Benchmark <docs/notes/llm/vllm-bench.rst>`_ - Benchmark suite for measuring vLLM serving performance
 - `SGLang Serving <docs/notes/llm/sglang-serving.rst>`_ - LLM inference with RadixAttention and expert parallelism
+- `SGLang Benchmark <docs/notes/llm/sglang-bench.rst>`_ - Benchmark suite for measuring SGLang serving performance
 
 
 HPC

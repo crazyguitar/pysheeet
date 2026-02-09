@@ -18,3 +18,4 @@ serving performance.
    vllm-serving
    vllm-bench
    sglang-serving
+   sglang-bench
