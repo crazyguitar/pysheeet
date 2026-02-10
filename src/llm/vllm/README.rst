@@ -104,6 +104,8 @@ or ``scancel``.
      - Host path to bind-mount into containers (default: ``/fsx``)
    * - ``--force, -f``
      - Force remove existing containers and images before loading
+   * - ``--nsys``
+     - Enable Nsight Systems profiling (writes to ``$WORKSPACE/nsys-vllm/``)
 
 All other arguments are passed directly to ``vllm serve`` as-is.
 
@@ -302,6 +304,32 @@ View traces at https://ui.perfetto.dev/ (supports ``.gz`` files directly).
 
 See the `vLLM Profiling Guide <https://docs.vllm.ai/en/latest/contributing/profiling/>`_
 for more details.
+
+**Nsight Systems profiling:**
+
+``--nsys`` wraps the ``vllm serve`` command with ``nsys profile`` for GPU-level tracing
+(CUDA kernels, NVTX ranges, memory usage). Profiles are saved per-node to
+``$WORKSPACE/nsys-vllm/``. The script sends ``SIGINT`` to nsys on cleanup for graceful
+finalization.
+
+.. code-block:: bash
+
+    # Server — enable nsys + vLLM's CUDA profiler (terminal 0)
+    bash run.sbatch --nsys \
+      Qwen/Qwen3-30B-A3B-FP8 \
+      --tensor-parallel-size 8 \
+      --enable-expert-parallel \
+      --profiler-config '{"profiler": "cuda"}'
+
+    # Client — run benchmark with profiling (terminal 1)
+    bash bench.sh -H <server-host> --type throughput --profile
+
+    # Stop server with Ctrl+C (terminal 0)
+    # Nsys will finalize profiles (~30s)
+    # Profile files: nsys-vllm/profile-node*.nsys-rep
+
+Open ``.nsys-rep`` files with `Nsight Systems <https://developer.nvidia.com/nsight-systems>`_
+or export to JSON for custom analysis.
 
 **Parallelism constraints:**
 

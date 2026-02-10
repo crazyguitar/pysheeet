@@ -12,6 +12,8 @@ IMAGE=""
 CONTAINER_MOUNT="/fsx"
 WORKSPACE="$PWD"
 FORCE_PULL=false
+ENABLE_NSYS=false
+VLLM_STARTED=false
 SERVE_ARGS=()
 
 while (( "$#" )); do
@@ -20,11 +22,30 @@ while (( "$#" )); do
     --container-mount)  CONTAINER_MOUNT="$2"; shift 2 ;;
     --workspace|-w)     WORKSPACE="$2"; shift 2 ;;
     --force|-f)         FORCE_PULL=true; shift ;;
+    --nsys)             ENABLE_NSYS=true; shift ;;
     --profile)          SERVE_ARGS+=(--profiler-config "{\"profiler\": \"torch\", \"torch_profiler_dir\": \"${PWD}/vllm_profile\"}"); shift ;;
     --profiler-config)  SERVE_ARGS+=(--profiler-config "$2"); shift 2 ;;
     *)                  SERVE_ARGS+=("$1"); shift ;;
   esac
 done
+
+# Build nsys command prefix
+NSYS_CMD=""
+if [[ "${ENABLE_NSYS}" == "true" ]]; then
+  NSYS_DIR="${WORKSPACE}/nsys-vllm"
+  mkdir -p "${NSYS_DIR}"
+  NSYS_PATH="${NSYS_DIR}/profile-node${SLURM_NODEID:-0}.nsys-rep"
+  NSYS_CMD="nsys profile"
+  NSYS_CMD+=" -t cuda,nvtx,osrt,cudnn,cublas"
+  NSYS_CMD+=" --trace-fork-before-exec=true"
+  NSYS_CMD+=" --cuda-graph-trace=node"
+  NSYS_CMD+=" --capture-range=cudaProfilerApi"
+  NSYS_CMD+=" --capture-range-end=repeat"
+  NSYS_CMD+=" --cuda-memory-usage=true"
+  NSYS_CMD+=" --cudabacktrace=true"
+  NSYS_CMD+=" -o ${NSYS_PATH}"
+  NSYS_CMD+=" --force-overwrite=true"
+fi
 IMAGE="${IMAGE:-${WORKSPACE}/vllm-serve-latest.tar.gz}"
 LOGDIR="${WORKSPACE}/logs"
 
@@ -155,9 +176,30 @@ setup_topology() {
   info "========================================"
 }
 
+stop_nsys() {
+  [[ "${VLLM_STARTED}" != "true" ]] && return 0
+  info "Sending SIGINT to nsys processes for graceful shutdown..."
+  srun --ntasks-per-node=1 bash -c '
+    for cid in $(docker ps -q); do
+      docker exec "$cid" pkill -INT -f "^nsys profile" 2>/dev/null || true
+    done
+  ' 2>/dev/null || true
+}
+
+wait_for_nsys() {
+  [[ "${VLLM_STARTED}" != "true" ]] && return 0
+  info "Waiting 30s for nsys to finalize profiles..."
+  sleep 30
+}
+
 cleanup() {
   info "Cleaning up containers..."
+  if [[ "${ENABLE_NSYS}" == "true" ]]; then
+    stop_nsys
+    wait_for_nsys
+  fi
   srun --ntasks-per-node=1 bash -c '
+    docker ps -aq | xargs -r docker stop -t 30 2>/dev/null || true
     docker ps -aq | xargs -r docker rm -f 2>/dev/null || true
   ' 2>/dev/null || true
   rm -f "${LOGDIR}/vllm_server_${SLURM_JOB_ID}.log"
@@ -211,7 +253,7 @@ start_vllm_ray() {
   local extra="--host 0.0.0.0 --port 8000 --data-parallel-backend ray --data-parallel-address ${HEAD_IP} --data-parallel-size ${DP}"
 
   srun --nodes=1 --nodelist="${HEAD_NODE}" bash -c \
-    "docker exec -d ray-head bash -c 'vllm serve ${SERVE_ARGS_STR} ${extra} 2>&1 | tee ${logfile}'"
+    "docker exec -d ray-head bash -c '${NSYS_CMD} vllm serve ${SERVE_ARGS_STR} ${extra} 2>&1 | tee ${logfile}'"
 }
 
 start_vllm_mp() {
@@ -230,16 +272,14 @@ start_vllm_mp() {
 
   for i in $(seq 1 $((NUM_NODES - 1))); do
     srun --nodes=1 --nodelist="${NODES[$i]}" bash -c \
-      "docker exec -d vllm-node-${i} bash -c 'vllm serve ${SERVE_ARGS_STR} ${extra} --node-rank ${i} --headless 2>&1 | tee ${logfile}.node${i}'"
+      "docker exec -d vllm-node-${i} bash -c '${NSYS_CMD} vllm serve ${SERVE_ARGS_STR} ${extra} --node-rank ${i} --headless 2>&1 | tee ${logfile}.node${i}'"
   done
 
   srun --nodes=1 --nodelist="${HEAD_NODE}" bash -c \
-    "docker exec -d vllm-node-0 bash -c 'vllm serve ${SERVE_ARGS_STR} ${extra} --node-rank 0 2>&1 | tee ${logfile}'"
+    "docker exec -d vllm-node-0 bash -c '${NSYS_CMD} vllm serve ${SERVE_ARGS_STR} ${extra} --node-rank 0 2>&1 | tee ${logfile}'"
 }
 
-# =============================================================================
 # RPC backend
-# =============================================================================
 start_vllm_rpc() {
   info "Starting vLLM with RPC-based DP..."
   local logfile="${LOGDIR}/vllm_server_${SLURM_JOB_ID}.log"
@@ -262,14 +302,14 @@ start_vllm_rpc() {
     local start_rank=$((i * DP_LOCAL))
     info "Starting RPC worker on ${NODES[$i]} (rank ${start_rank})..."
     srun --nodes=1 --nodelist="${NODES[$i]}" bash -c "
-      docker exec -d vllm-worker bash -c 'vllm serve ${SERVE_ARGS_STR} ${extra} \
+      docker exec -d vllm-worker bash -c '${NSYS_CMD} vllm serve ${SERVE_ARGS_STR} ${extra} \
         --data-parallel-start-rank ${start_rank} --headless \
         2>&1 | tee ${LOGDIR}/vllm_worker_${SLURM_JOB_ID}_${i}.log'
     "
   done
 
   srun --nodes=1 --nodelist="${HEAD_NODE}" bash -c "
-    docker exec -d vllm-head bash -c 'vllm serve ${SERVE_ARGS_STR} ${extra} \
+    docker exec -d vllm-head bash -c '${NSYS_CMD} vllm serve ${SERVE_ARGS_STR} ${extra} \
       --host 0.0.0.0 --port 8000 \
       2>&1 | tee ${logfile}'
   "
@@ -311,6 +351,7 @@ esac
 tail -f "${LOGFILE}" 2>/dev/null &
 
 wait_for_server || exit 1
+VLLM_STARTED=true
 
 info "vLLM serving on ${HEAD_IP}:8000 — Ctrl+C or scancel to stop"
 info "Logs: ${LOGFILE}"

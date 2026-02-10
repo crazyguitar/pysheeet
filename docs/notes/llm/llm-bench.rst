@@ -211,3 +211,52 @@ CLI Differences
      - ``--result-dir ./results``
      - ``--output-file ./results/out.json``
      - ``--result-dir ./results``
+
+Profiling
+---------
+
+Benchmark runs can be combined with profiling to correlate performance metrics with
+GPU-level traces. Two profiling approaches are available for vLLM:
+
+**PyTorch profiler** — vLLM's built-in profiler triggered via REST endpoints. Start the
+server with ``--profile`` (or ``--profiler-config``), then pass ``--profile`` to the
+benchmark client to call ``/start_profile`` and ``/stop_profile`` around the workload.
+
+.. code-block:: bash
+
+    # Server — start with profiling enabled
+    bash run.sbatch --profile \
+      Qwen/Qwen3-30B-A3B-FP8 \
+      --tensor-parallel-size 8
+
+    # Client — benchmark with profiling
+    bash bench.sh -H <server-host> --type throughput --profile
+
+View traces at https://ui.perfetto.dev/ (supports ``.gz`` files directly).
+
+**Nsight Systems** — wraps ``vllm serve`` with ``nsys profile`` for CUDA kernel,
+NVTX, and memory tracing. Combine with ``--profiler-config '{"profiler": "cuda"}'``
+to also capture vLLM's internal CUDA profiler markers.
+
+.. code-block:: bash
+
+    # Server — enable nsys + CUDA profiler (terminal 0)
+    bash run.sbatch --nsys \
+      Qwen/Qwen3-30B-A3B-FP8 \
+      --tensor-parallel-size 8 \
+      --enable-expert-parallel \
+      --profiler-config '{"profiler": "cuda"}'
+
+    # Client — benchmark with profiling (terminal 1)
+    bash bench.sh -H <server-host> --type throughput --profile
+
+    # Stop server with Ctrl+C (terminal 0)
+    # Nsys finalizes profiles (~30s)
+    # Profile files: nsys-vllm/profile-node*.nsys-rep
+
+Open ``.nsys-rep`` files with `Nsight Systems <https://developer.nvidia.com/nsight-systems>`_.
+
+See the `vLLM Serving Guide <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/vllm/README.rst>`_
+for full ``run.sbatch`` flag reference and the
+`vLLM Profiling Guide <https://docs.vllm.ai/en/latest/contributing/profiling/>`_
+for more details.
