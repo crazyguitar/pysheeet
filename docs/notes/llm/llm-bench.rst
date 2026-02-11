@@ -73,8 +73,18 @@ the input) and the decode phase (generating tokens).
 
 .. code-block:: bash
 
-    --dataset-name random --random-input-len 512 --random-output-len 256 \
-    --num-prompts 100 --request-rate inf
+    # vLLM
+    vllm bench serve --dataset-name random --random-input-len 512 --random-output-len 256 \
+        --num-prompts 100 --request-rate inf
+
+    # SGLang
+    python -m sglang.bench_serving --dataset-name random --random-input 512 --random-output 256 \
+        --num-prompts 100 --request-rate inf
+
+    # TensorRT-LLM
+    python -m tensorrt_llm.serve.scripts.benchmark_serving \
+        --dataset-name random --random-input-len 512 --random-output-len 256 \
+        --num-prompts 100 --max-concurrency 100
 
 Prefill (TTFT)
 --------------
@@ -89,9 +99,18 @@ server lightly loaded so TTFT reflects compute time, not queueing delay.
 
 .. code-block:: bash
 
-    # Sweeps input length: 128, 512, 2048, 4096, 16384
-    --dataset-name random --random-input-len $LEN --random-output-len 1 \
-    --num-prompts 100 --request-rate 4
+    # vLLM - sweeps input length: 128, 512, 2048, 4096, 16384
+    vllm bench serve --dataset-name random --random-input-len $LEN --random-output-len 1 \
+        --num-prompts 100 --request-rate 4
+
+    # SGLang
+    python -m sglang.bench_serving --dataset-name random --random-input $LEN --random-output 1 \
+        --num-prompts 100 --request-rate 4
+
+    # TensorRT-LLM
+    python -m tensorrt_llm.serve.scripts.benchmark_serving \
+        --dataset-name random --random-input-len $LEN --random-output-len 1 \
+        --num-prompts 100 --max-concurrency 4
 
 Decode (ITL)
 ------------
@@ -107,9 +126,18 @@ decode speed.
 
 .. code-block:: bash
 
-    # Sweeps output length: 128, 256, 512, 1024
-    --dataset-name random --random-input-len 128 --random-output-len $LEN \
-    --num-prompts 100 --request-rate 4
+    # vLLM - sweeps output length: 128, 256, 512, 1024
+    vllm bench serve --dataset-name random --random-input-len 128 --random-output-len $LEN \
+        --num-prompts 100 --request-rate 4
+
+    # SGLang
+    python -m sglang.bench_serving --dataset-name random --random-input 128 --random-output $LEN \
+        --num-prompts 100 --request-rate 4
+
+    # TensorRT-LLM
+    python -m tensorrt_llm.serve.scripts.benchmark_serving \
+        --dataset-name random --random-input-len 128 --random-output-len $LEN \
+        --num-prompts 100 --max-concurrency 4
 
 Latency (E2E)
 -------------
@@ -124,9 +152,18 @@ E2E latency = TTFT + (output_tokens × ITL).
 
 .. code-block:: bash
 
-    # Tests short (128/128), medium (512/256), long (4096/512)
-    --dataset-name random --random-input-len $IN --random-output-len $OUT \
-    --num-prompts 100 --request-rate 1
+    # vLLM - tests short (128/128), medium (512/256), long (4096/512)
+    vllm bench serve --dataset-name random --random-input-len $IN --random-output-len $OUT \
+        --num-prompts 100 --request-rate 1
+
+    # SGLang
+    python -m sglang.bench_serving --dataset-name random --random-input $IN --random-output $OUT \
+        --num-prompts 100 --request-rate 1
+
+    # TensorRT-LLM
+    python -m tensorrt_llm.serve.scripts.benchmark_serving \
+        --dataset-name random --random-input-len $IN --random-output-len $OUT \
+        --num-prompts 100 --max-concurrency 1
 
 Concurrency
 -----------
@@ -142,9 +179,18 @@ how many concurrent users the server can handle before quality degrades.
 
 .. code-block:: bash
 
-    # Sweeps concurrency: 1, 4, 16, 64, 256
-    --dataset-name random --random-input-len 512 --random-output-len 256 \
-    --num-prompts 100 --request-rate inf --max-concurrency $C
+    # vLLM - sweeps concurrency: 1, 4, 16, 64, 256
+    vllm bench serve --dataset-name random --random-input-len 512 --random-output-len 256 \
+        --num-prompts 100 --request-rate inf --max-concurrency $C
+
+    # SGLang
+    python -m sglang.bench_serving --dataset-name random --random-input 512 --random-output 256 \
+        --num-prompts 100 --request-rate inf --max-concurrency $C
+
+    # TensorRT-LLM
+    python -m tensorrt_llm.serve.scripts.benchmark_serving \
+        --dataset-name random --random-input-len 512 --random-output-len 256 \
+        --num-prompts 100 --max-concurrency $C
 
 ShareGPT
 --------
@@ -159,9 +205,23 @@ benchmarks. The dataset is auto-downloaded from HuggingFace if not present local
 
 .. code-block:: bash
 
-    --dataset-name sharegpt --dataset-path ShareGPT_V3_unfiltered_cleaned_split.json \
-    --num-prompts 100 --request-rate inf   # throughput mode
-    --num-prompts 100 --request-rate 4     # realistic load
+    # vLLM - throughput mode
+    vllm bench serve --dataset-name sharegpt --dataset-path ShareGPT_V3_unfiltered_cleaned_split.json \
+        --num-prompts 100 --request-rate inf
+
+    # vLLM - realistic load
+    vllm bench serve --dataset-name sharegpt --dataset-path ShareGPT_V3_unfiltered_cleaned_split.json \
+        --num-prompts 100 --request-rate 4
+
+    # SGLang - throughput mode
+    python -m sglang.bench_serving --dataset-name sharegpt \
+        --dataset-path ShareGPT_V3_unfiltered_cleaned_split.json \
+        --num-prompts 100 --request-rate inf
+
+    # TensorRT-LLM - throughput mode
+    python -m tensorrt_llm.serve.scripts.benchmark_serving \
+        --dataset-name sharegpt --dataset-path ShareGPT_V3_unfiltered_cleaned_split.json \
+        --num-prompts 100 --max-concurrency 100
 
 Key Metrics
 -----------
