@@ -320,3 +320,17 @@ See the `vLLM Serving Guide <https://github.com/crazyguitar/pysheeet/blob/master
 for full ``run.sbatch`` flag reference and the
 `vLLM Profiling Guide <https://docs.vllm.ai/en/latest/contributing/profiling/>`_
 for more details.
+
+Offline Benchmarking
+--------------------
+
+vLLM also supports offline benchmarking to measure raw inference performance without
+API server overhead. This is useful for:
+
+- Measuring peak throughput without network/serialization overhead
+- Multi-node distributed inference testing
+- Profiling with Nsight Systems or PyTorch profiler
+- Testing with custom datasets (ShareGPT, random prompts)
+
+For complete offline benchmarking documentation, see the
+`vLLM Offline Benchmark Guide <vllm/README.rst>`_.
