@@ -13,9 +13,9 @@ Benchmark suites for measuring LLM serving performance with vLLM, SGLang, and
 TensorRT-LLM. All use similar methodology — same test categories, workloads, and
 metrics — for easy comparison between the three inference engines.
 
-- **vLLM:** ``vllm bench serve`` via `bench.sh <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/vllm/bench.sh>`_
-- **SGLang:** ``python -m sglang.bench_serving`` via `bench.sh <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/sglang/bench.sh>`_
-- **TensorRT-LLM:** ``python -m tensorrt_llm.serve.scripts.benchmark_serving`` via `bench.sh <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/tensorrt-llm/bench.sh>`_
+- **vLLM:** ``vllm bench serve`` via `bench.sh <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/vllm/bench.sh>`__
+- **SGLang:** ``python -m sglang.bench_serving`` via `bench.sh <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/sglang/bench.sh>`__
+- **TensorRT-LLM:** ``python -m tensorrt_llm.serve.scripts.benchmark_serving`` via `bench.sh <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/tensorrt-llm/bench.sh>`__
 
 The scripts handle Docker image loading and container management automatically. If the
 CLI is not available on the host, they load the Docker image and re-execute inside the

@@ -784,7 +784,7 @@ Launch with Slurm
 -----------------
 
 Submit distributed training jobs to Slurm clusters. Slurm manages resource allocation
-and node assignment. See :doc:`slurm` for more Slurm examples.
+and node assignment. See :doc:`../hpc/slurm` for more Slurm examples.
 
 .. code-block:: bash
 

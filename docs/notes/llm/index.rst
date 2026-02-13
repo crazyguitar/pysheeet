@@ -14,6 +14,5 @@ serving performance.
    :maxdepth: 1
 
    pytorch
-   distributed
    llm-serving
    llm-bench
