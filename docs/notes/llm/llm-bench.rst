@@ -240,6 +240,9 @@ reused across requests, reducing TTFT.
 
 .. code-block:: bash
 
+    # Download sonnet dataset
+    wget -q https://raw.githubusercontent.com/vllm-project/vllm/main/benchmarks/sonnet.txt
+
     # vLLM - prefill-heavy (short output isolates prefill)
     vllm bench serve --dataset-name sonnet --dataset-path sonnet.txt \
         --sonnet-input-len 550 --sonnet-output-len 150 --sonnet-prefix-len 200 \
