@@ -64,69 +64,10 @@ auto-detects the model from the server.
 Multi-Node with Slurm
 ---------------------
 
-Some large models (e.g., DeepSeek-V3, Llama-3.1-405B) may not fit into a single node.
-vLLM, SGLang, and TensorRT-LLM support serving across multiple nodes with different
-parallelism strategies (TP, PP, EP, DP). Multi-node deployment can be tricky at the
-beginning — the ``run.sbatch`` examples below show how to use ``salloc`` with each
-engine to get started quickly on Slurm. For full setup and flag references,
-see the per-engine READMEs:
-
-`vLLM <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/vllm/README.rst>`_,
-`SGLang <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/sglang/README.rst>`_,
-`TensorRT-LLM <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/tensorrt-llm/README.rst>`_.
-
-**vLLM** — auto-computes DP from total GPUs and TP/PP. Supports expert parallel (EP)
-for MoE models and pipeline parallel (PP) for large dense models:
-
-.. code-block:: bash
-
-    salloc -N 2 --gpus-per-node=8 --exclusive
-
-    # EP for MoE (TP=8, DP=2, EP=16 auto-computed)
-    bash run.sbatch \
-      Qwen/Qwen3-30B-A3B-FP8 \
-      --tensor-parallel-size 8 \
-      --enable-expert-parallel
-
-    # PP for large dense models (TP=8, PP=2)
-    bash run.sbatch \
-      deepseek-ai/DeepSeek-V2-Lite \
-      --tensor-parallel-size 8 \
-      --pipeline-parallel-size 2
-
-**SGLang** — requires explicit DP/EP/PP values. Use ``--enable-dp-attention`` for
-multi-node data parallelism:
-
-.. code-block:: bash
-
-    salloc -N 2 --gpus-per-node=8 --exclusive
-
-    # EP for MoE (TP=8, EP=2 across 2 nodes)
-    bash run.sbatch \
-      --model-path Qwen/Qwen1.5-MoE-A2.7B \
-      --tp 8 --ep 2
-
-    # DP with DP attention (TP=8, DP=2)
-    bash run.sbatch \
-      --model-path Qwen/Qwen2.5-14B-Instruct \
-      --tp 8 --dp 2 --enable-dp-attention
-
-    # PP for large dense models (TP=8, PP=2)
-    bash run.sbatch \
-      --model-path deepseek-ai/DeepSeek-V2-Lite \
-      --tp 8 --pp 2
-
-**TensorRT-LLM** — uses ``--tp_size`` for tensor parallelism:
-
-.. code-block:: bash
-
-    salloc -N 1 --gpus-per-node=8 --exclusive
-
-    bash run.sbatch \
-      Qwen/Qwen2.5-14B-Instruct \
-      --tp_size 8
-
-Once the server is running, benchmark from another terminal using ``bench.sh`` as shown
+For benchmarking larger models (e.g., DeepSeek-V3, Llama-3.1-405B) that cannot fit on a
+single node, see the :ref:`Distributed Serving on SLURM <llm-serving:Distributed Serving on SLURM>`
+section in :doc:`llm-serving` for how to deploy multi-node serving with different
+parallelism strategies. Once the server is running, benchmark using ``bench.sh`` as shown
 in the Quick Start above.
 
 Throughput

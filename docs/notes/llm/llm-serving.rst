@@ -188,10 +188,13 @@ Expert parallelism (EP) is handled differently:
 Distributed Serving on SLURM
 ----------------------------
 
-For production deployments on HPC clusters, both engines provide ``run.sbatch`` scripts
-that automate multi-node serving. The scripts handle Docker image distribution to all
-nodes, container launch with EFA/GPU passthrough, worker coordination, and health
-checking. The server runs until you stop it with ``Ctrl+C`` or ``scancel``.
+Some large models (e.g., DeepSeek-V3, Llama-3.1-405B) may not fit into a single node.
+All three engines support serving across multiple nodes with different parallelism
+strategies (TP, PP, EP, DP). Multi-node deployment can be tricky at the beginning —
+the ``run.sbatch`` examples below show how to use ``salloc`` with each engine to get
+started quickly on Slurm. The scripts handle Docker image distribution to all nodes,
+container launch with EFA/GPU passthrough, worker coordination, and health checking.
+The server runs until you stop it with ``Ctrl+C`` or ``scancel``.
 
 **vLLM:**
 
