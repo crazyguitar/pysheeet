@@ -39,7 +39,7 @@ def viztracer_profiler(output_file, world_rank):
         try:
             from viztracer import VizTracer
 
-            viztracer = VizTracer(output_file=output_file, verbose=0)
+            viztracer = VizTracer(output_file=output_file, verbose=0, log_torch=True)
             if world_rank == 0:
                 print(f"VizTracer profiling enabled. Output: {output_file}")
         except ImportError:
