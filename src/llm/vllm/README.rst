@@ -371,10 +371,7 @@ Uses ``torchrun`` for multi-node coordination and supports profiling with Nsight
       --input-len 1024 --output-len 256 \
       --num-prompts 100
 
-**Multi-node with custom image:**
-
-.. code-block:: bash
-
+    # Multi-node with custom docker image
     salloc -N 4 bash offline_bench.sh \
       --image "$PWD/vllm-serve-latest.tar.gz" \
       --model Qwen/Qwen2-57B-A14B \
@@ -384,10 +381,7 @@ Uses ``torchrun`` for multi-node coordination and supports profiling with Nsight
       --input-len 2048 --output-len 512 \
       --num-prompts 50
 
-**ShareGPT dataset:**
-
-.. code-block:: bash
-
+    # ShareGPT dataset
     wget -O ShareGPT_V3_unfiltered_cleaned_split.json \
       https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered/resolve/main/ShareGPT_V3_unfiltered_cleaned_split.json
 
@@ -397,6 +391,10 @@ Uses ``torchrun`` for multi-node coordination and supports profiling with Nsight
       --num-prompts 100
 
 **Nsight Systems profiling:**
+
+Similar to the server workflow above, ``--nsys`` wraps the ``torchrun`` command (instead
+of ``vllm serve``) with ``nsys profile``. Profiles are saved per-node to
+``$WORKSPACE/nsys-offline/``.
 
 .. code-block:: bash
 
