@@ -64,10 +64,16 @@ auto-detects the model from the server.
 Multi-Node with Slurm
 ---------------------
 
-For production-scale benchmarking, use ``salloc`` to allocate multiple nodes and
-``run.sbatch`` to launch the server with parallelism strategies. Each engine's
-``run.sbatch`` handles Docker image loading, container management, and multi-node
-coordination automatically.
+Some large models (e.g., DeepSeek-V3, Llama-3.1-405B) may not fit into a single node.
+vLLM, SGLang, and TensorRT-LLM support serving across multiple nodes with different
+parallelism strategies (TP, PP, EP, DP). Multi-node deployment can be tricky at the
+beginning — the ``run.sbatch`` examples below show how to use ``salloc`` with each
+engine to get started quickly on Slurm. For full setup and flag references,
+see the per-engine READMEs:
+
+`vLLM <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/vllm/README.rst>`_,
+`SGLang <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/sglang/README.rst>`_,
+`TensorRT-LLM <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/tensorrt-llm/README.rst>`_.
 
 **vLLM** — auto-computes DP from total GPUs and TP/PP. Supports expert parallel (EP)
 for MoE models and pipeline parallel (PP) for large dense models:
@@ -122,11 +128,6 @@ multi-node data parallelism:
 
 Once the server is running, benchmark from another terminal using ``bench.sh`` as shown
 in the Quick Start above.
-
-See the per-engine READMEs for full flag references:
-`vLLM <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/vllm/README.rst>`_,
-`SGLang <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/sglang/README.rst>`_,
-`TensorRT-LLM <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/tensorrt-llm/README.rst>`_.
 
 Throughput
 ----------
