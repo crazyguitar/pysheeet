@@ -185,6 +185,8 @@ Expert parallelism (EP) is handled differently:
 - **TensorRT-LLM**: EP subdivides TP (same as SGLang). ``--tp_size 8 --ep_size 2`` splits
   experts across 2 groups. Constraint: ``moe_tp × ep = tp_size``.
 
+.. _distributed-serving-on-slurm:
+
 Distributed Serving on SLURM
 ----------------------------
 

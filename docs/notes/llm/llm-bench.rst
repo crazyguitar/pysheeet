@@ -65,7 +65,7 @@ Multi-Node with Slurm
 ---------------------
 
 For benchmarking larger models (e.g., DeepSeek-V3, Llama-3.1-405B) that cannot fit on a
-single node, refer to `Distributed Serving on SLURM <llm-serving.html#distributed-serving-on-slurm>`__
+single node, refer to `Distributed Serving on SLURM <https://www.pythonsheets.com/notes/llm/llm-serving.html#distributed-serving-on-slurm>`__
 for how to deploy multi-node serving with different parallelism strategies. Once the
 server is running, benchmark using ``bench.sh`` as shown in the Quick Start above.
 
