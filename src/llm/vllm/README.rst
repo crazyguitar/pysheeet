@@ -407,3 +407,25 @@ Uses ``torchrun`` for multi-node coordination and supports profiling with Nsight
       --input-len 2048 --output-len 512 \
       --num-prompts 50
     # Profile files: nsys-offline/profile-node*.nsys-rep
+
+**VizTracer profiling (Python-level tracing):**
+
+VizTracer is a lightweight Python profiler that traces function calls without the memory
+overhead of PyTorch profiler. It works reliably with multi-node/high data-parallelism
+setups where PyTorch profiler may cause OOM. Use VizTracer to understand Python-level
+execution flow and identify bottlenecks in application logic.
+
+.. code-block:: bash
+
+    salloc -N 2 bash offline_bench.sh \
+      --model Qwen/Qwen2-57B-A14B \
+      --tensor-parallel-size 4 --enable-expert-parallel \
+      --viztracer ./vllm-trace.json \
+      --num-prompts 50
+    # View trace at https://ui.perfetto.dev/
+
+**Profiling comparison:**
+
+- **nsys**: GPU kernel-level profiling (CUDA operations, memory transfers, NCCL)
+- **VizTracer**: Python function-level profiling (application logic, scheduling)
+- Use nsys for GPU performance analysis, VizTracer for Python code analysis

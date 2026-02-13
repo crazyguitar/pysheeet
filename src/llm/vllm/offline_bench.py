@@ -23,11 +23,62 @@ import argparse
 import json
 import os
 import time
+from contextlib import contextmanager
 from pathlib import Path
 from typing import List
 import numpy as np
 
 from vllm import LLM, SamplingParams
+
+
+@contextmanager
+def viztracer_profiler(output_file, world_rank):
+    """VizTracer profiler context manager."""
+    viztracer = None
+    if output_file:
+        try:
+            from viztracer import VizTracer
+
+            viztracer = VizTracer(output_file=output_file, verbose=0)
+            if world_rank == 0:
+                print(f"VizTracer profiling enabled. Output: {output_file}")
+        except ImportError:
+            if world_rank == 0:
+                print("Warning: viztracer not installed (pip install viztracer)")
+
+    try:
+        if viztracer:
+            viztracer.start()
+            if world_rank == 0:
+                print("VizTracer started")
+        yield
+    finally:
+        if viztracer:
+            viztracer.stop()
+            viztracer.save()
+            if world_rank == 0:
+                print(f"VizTracer trace saved to {output_file}")
+
+
+@contextmanager
+def cuda_profiler(enabled, world_rank):
+    """CUDA profiler context manager for nsys."""
+    profiler = None
+
+    if enabled:
+        import torch.cuda.profiler as profiler
+
+    try:
+        if enabled:
+            profiler.start()
+            if world_rank == 0:
+                print("CUDA profiler started for nsys")
+        yield
+    finally:
+        if enabled and profiler:
+            profiler.stop()
+            if world_rank == 0:
+                print("CUDA profiler stopped")
 
 
 def load_sharegpt_prompts(dataset_path: str, num_prompts: int) -> List[str]:
@@ -143,6 +194,19 @@ def parse_args():
     )
     parser.add_argument("--seed", type=int, default=0, help="Random seed")
 
+    # Profiling args
+    parser.add_argument(
+        "--nsys",
+        type=str,
+        default=None,
+        help="Enable nsys profiling and save to file (e.g., ./profile.nsys-rep)",
+    )
+    parser.add_argument(
+        "--viztracer",
+        type=str,
+        default=None,
+        help="Enable VizTracer profiling and save to file (e.g., ./vllm-trace.json)",
+    )
     # vLLM args
     parser.add_argument(
         "--enforce-eager", action="store_true", help="Disable CUDA graph"
@@ -213,36 +277,29 @@ def main():
     dp_rank = llm.llm_engine.vllm_config.parallel_config.data_parallel_rank
     dp_size = llm.llm_engine.vllm_config.parallel_config.data_parallel_size
 
+    # Get world rank for printing
+    import torch.distributed as dist
+
+    world_rank = dist.get_rank() if dist.is_initialized() else 0
+
     # Distribute prompts across DP ranks
     local_prompts = [p for i, p in enumerate(prompts) if i % dp_size == dp_rank]
 
     # Warmup
-    if dp_rank == 0:
+    if world_rank == 0:
         print("Warming up...")
     _ = llm.generate(local_prompts[:1], sampling_params)
 
-    # Start CUDA profiler for nsys if enabled
-    enable_cuda_profiler = os.environ.get("VLLM_NSYS_PROFILING") == "1"
-    if enable_cuda_profiler:
-        import torch.cuda.profiler as cuda_profiler
-
-        cuda_profiler.start()
-        if dp_rank == 0:
-            print("CUDA profiler started for nsys")
-
-    # Benchmark
-    if dp_rank == 0:
+    # Benchmark with profiling
+    if world_rank == 0:
         print(f"Running benchmark with {len(prompts)} total prompts...")
 
-    start = time.perf_counter()
-    outputs = llm.generate(local_prompts, sampling_params)
-    elapsed = time.perf_counter() - start
-
-    # Stop CUDA profiler
-    if enable_cuda_profiler:
-        cuda_profiler.stop()
-        if dp_rank == 0:
-            print("CUDA profiler stopped")
+    with cuda_profiler(args.nsys, world_rank), viztracer_profiler(
+        args.viztracer, world_rank
+    ):
+        start = time.perf_counter()
+        outputs = llm.generate(local_prompts, sampling_params)
+        elapsed = time.perf_counter() - start
 
     # Collect per-request metrics
     metrics = []

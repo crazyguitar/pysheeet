@@ -61,15 +61,10 @@ load_or_pull_image() {
 
 launch_container() {
   local cmd="$1"
-  local docker_env=""
-  if [[ "${ENABLE_NSYS}" == "true" ]]; then
-    docker_env="-e VLLM_NSYS_PROFILING=1"
-  fi
   _run "
         docker run --rm --gpus all --ipc=host --net=host \
             -v '${PWD}:${PWD}' -w '${PWD}' \
             -v '${CONTAINER_MOUNT}:${CONTAINER_MOUNT}' \
-            ${docker_env} \
             --entrypoint bash '${CONTAINER_IMAGE}' \
             -c '${cmd}'
     "
@@ -96,6 +91,7 @@ Model/Benchmark Args (passed to offline_bench.py):
   --enforce-eager                           Disable CUDA graph
   --max-tokens N                            Max output tokens (default: 128)
   --dataset-path PATH                       Path to ShareGPT dataset
+  --viztracer FILE                          Enable VizTracer and save to file (e.g., ./vllm-trace.json)
 
 Examples:
   # Single GPU
@@ -178,9 +174,9 @@ if ! command -v python3 &>/dev/null || ! python3 -c "import vllm" &>/dev/null 2>
   load_or_pull_image
   SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-  # Build torchrun command
   # Build nsys command prefix
   NSYS_CMD=""
+  NSYS_ARG=""
   if [[ "${ENABLE_NSYS}" == "true" ]]; then
     NSYS_DIR="${PWD}/nsys-offline"
     mkdir -p "${NSYS_DIR}"
@@ -195,6 +191,7 @@ if ! command -v python3 &>/dev/null || ! python3 -c "import vllm" &>/dev/null 2>
     NSYS_CMD+=" --cudabacktrace=true"
     NSYS_CMD+=" -o ${NSYS_PATH}"
     NSYS_CMD+=" --force-overwrite=true"
+    NSYS_ARG="--nsys ${NSYS_PATH}"
   fi
 
   TORCHRUN_CMD="${NSYS_CMD:+${NSYS_CMD} }torchrun \
@@ -227,11 +224,12 @@ info "Nodes: ${NUM_NODES}, Processes per node: ${NPROC}"
 info "Rendezvous: ${HEAD_IP}:${MASTER_PORT}"
 info "========================================"
 
-torchrun \
+${NSYS_CMD} torchrun \
   --nnodes="${NUM_NODES}" \
   --nproc-per-node="${NPROC}" \
   --rdzv-backend=c10d \
   --rdzv-endpoint="${HEAD_IP}:${MASTER_PORT}" \
   --rdzv-id="${SLURM_JOB_ID:-12345}" \
   "${SCRIPT_DIR}/offline_bench.py" \
+  ${NSYS_ARG} \
   "${BENCH_ARGS[@]}"
