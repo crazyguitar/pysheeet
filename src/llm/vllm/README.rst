@@ -344,3 +344,79 @@ or export to JSON for custom analysis.
 - EP mode: ``TOTAL_GPUS = DP × TP``, EP auto-computed by vLLM
 - PP mode: ``TOTAL_GPUS = TP × PP`` (no DP)
 - DP mode: ``TOTAL_GPUS = DP × TP``
+
+
+Offline Benchmarking
+---------------------
+
+``offline_bench.sh`` measures raw inference performance without API server overhead.
+Uses ``torchrun`` for multi-node coordination and supports profiling with Nsight Systems
+or PyTorch profiler.
+
+**Single GPU:**
+
+.. code-block:: bash
+
+    bash offline_bench.sh \
+      --model meta-llama/Llama-3.1-8B \
+      --input-len 512 --output-len 128 \
+      --num-prompts 100
+
+**Multi-GPU with tensor parallelism:**
+
+.. code-block:: bash
+
+    salloc -N 1 bash offline_bench.sh \
+      --model Qwen/Qwen2-57B-A14B \
+      --tensor-parallel-size 4 --enable-expert-parallel \
+      --input-len 1024 --output-len 256 \
+      --num-prompts 100
+
+**Multi-node with custom image:**
+
+.. code-block:: bash
+
+    salloc -N 4 bash offline_bench.sh \
+      --image "$PWD/vllm-serve-latest.tar.gz" \
+      --model Qwen/Qwen2-57B-A14B \
+      --all2all-backend allgather_reducescatter \
+      --tensor-parallel-size 4 --enable-expert-parallel \
+      --gpu-memory-utilization 0.8 \
+      --input-len 2048 --output-len 512 \
+      --num-prompts 50
+
+**ShareGPT dataset:**
+
+.. code-block:: bash
+
+    wget -O ShareGPT_V3_unfiltered_cleaned_split.json \
+      https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered/resolve/main/ShareGPT_V3_unfiltered_cleaned_split.json
+
+    bash offline_bench.sh \
+      --model meta-llama/Llama-3.1-8B \
+      --dataset-path ShareGPT_V3_unfiltered_cleaned_split.json \
+      --num-prompts 100
+
+**Nsight Systems profiling:**
+
+.. code-block:: bash
+
+    salloc -N 4 bash offline_bench.sh --nsys \
+      --model Qwen/Qwen2-57B-A14B \
+      --tensor-parallel-size 4 --enable-expert-parallel \
+      --all2all-backend allgather_reducescatter \
+      --input-len 2048 --output-len 512 \
+      --num-prompts 50
+    # Profile files: nsys-offline/profile-node*.nsys-rep
+
+**PyTorch profiler:**
+
+.. code-block:: bash
+
+    salloc -N 2 bash offline_bench.sh \
+      --model Qwen/Qwen2-57B-A14B \
+      --tensor-parallel-size 4 --enable-expert-parallel \
+      --profile \
+      --profile-result-dir ./offline-profile-results \
+      --num-prompts 50
+    # Profile files: offline-profile-results/

@@ -333,4 +333,4 @@ API server overhead. This is useful for:
 - Testing with custom datasets (ShareGPT, random prompts)
 
 For complete offline benchmarking documentation, see the
-`vLLM Offline Benchmark Guide <vllm/README.rst>`_.
+`vLLM Offline Benchmark Guide <https://github.com/crazyguitar/pysheeet/blob/master/src/llm/vllm/README.rst>`_.
