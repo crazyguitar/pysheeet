@@ -143,19 +143,6 @@ def parse_args():
     )
     parser.add_argument("--seed", type=int, default=0, help="Random seed")
 
-    # Profiling args
-    parser.add_argument(
-        "--profile",
-        action="store_true",
-        help="Enable profiling (nsys or pytorch)",
-    )
-    parser.add_argument(
-        "--profile-result-dir",
-        type=str,
-        default=None,
-        help="Directory to save profile results (default: ./profile-results)",
-    )
-
     # vLLM args
     parser.add_argument(
         "--enforce-eager", action="store_true", help="Disable CUDA graph"
@@ -229,37 +216,6 @@ def main():
     # Distribute prompts across DP ranks
     local_prompts = [p for i, p in enumerate(prompts) if i % dp_size == dp_rank]
 
-    # Setup profiling
-    profiler = None
-    if args.profile:
-        import torch.profiler as profiler_module
-
-        profile_dir = args.profile_result_dir or "./profile-results"
-        os.makedirs(profile_dir, exist_ok=True)
-
-        # Check if nsys is available
-        nsys_available = os.system("which nsys > /dev/null 2>&1") == 0
-
-        if nsys_available and dp_rank == 0:
-            print(f"Nsys detected. Profile will be saved to {profile_dir}/")
-            print(
-                "Note: Start with 'nsys profile -o profile python ...' for full nsys profiling"
-            )
-
-        # Use PyTorch profiler
-        profiler = profiler_module.profile(
-            activities=[
-                profiler_module.ProfilerActivity.CPU,
-                profiler_module.ProfilerActivity.CUDA,
-            ],
-            schedule=profiler_module.schedule(wait=1, warmup=1, active=3, repeat=1),
-            on_trace_ready=profiler_module.tensorboard_trace_handler(profile_dir),
-            record_shapes=True,
-            profile_memory=True,
-            with_stack=True,
-        )
-        profiler.__enter__()
-
     # Warmup
     if dp_rank == 0:
         print("Warming up...")
@@ -269,6 +225,7 @@ def main():
     enable_cuda_profiler = os.environ.get("VLLM_NSYS_PROFILING") == "1"
     if enable_cuda_profiler:
         import torch.cuda.profiler as cuda_profiler
+
         cuda_profiler.start()
         if dp_rank == 0:
             print("CUDA profiler started for nsys")
@@ -286,14 +243,6 @@ def main():
         cuda_profiler.stop()
         if dp_rank == 0:
             print("CUDA profiler stopped")
-
-    # Stop profiling
-    if profiler:
-        profiler.__exit__(None, None, None)
-        if dp_rank == 0:
-            print(
-                f"\nProfile saved to {args.profile_result_dir or './profile-results'}/"
-            )
 
     # Collect per-request metrics
     metrics = []

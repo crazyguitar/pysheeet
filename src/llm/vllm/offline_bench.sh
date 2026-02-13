@@ -96,8 +96,6 @@ Model/Benchmark Args (passed to offline_bench.py):
   --enforce-eager                           Disable CUDA graph
   --max-tokens N                            Max output tokens (default: 128)
   --dataset-path PATH                       Path to ShareGPT dataset
-  --profile                                 Enable PyTorch profiler
-  --profile-result-dir DIR                  Profile output directory (default: ./profile-results)
 
 Examples:
   # Single GPU

@@ -350,8 +350,7 @@ Offline Benchmarking
 ---------------------
 
 ``offline_bench.sh`` measures raw inference performance without API server overhead.
-Uses ``torchrun`` for multi-node coordination and supports profiling with Nsight Systems
-or PyTorch profiler.
+Uses ``torchrun`` for multi-node coordination and supports profiling with Nsight Systems.
 
 **Single GPU:**
 
@@ -408,15 +407,3 @@ or PyTorch profiler.
       --input-len 2048 --output-len 512 \
       --num-prompts 50
     # Profile files: nsys-offline/profile-node*.nsys-rep
-
-**PyTorch profiler:**
-
-.. code-block:: bash
-
-    salloc -N 2 bash offline_bench.sh \
-      --model Qwen/Qwen2-57B-A14B \
-      --tensor-parallel-size 4 --enable-expert-parallel \
-      --profile \
-      --profile-result-dir ./offline-profile-results \
-      --num-prompts 50
-    # Profile files: offline-profile-results/
