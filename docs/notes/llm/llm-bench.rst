@@ -231,6 +231,57 @@ benchmarks. The dataset is auto-downloaded from HuggingFace if not present local
         --dataset-name sharegpt --dataset-path ShareGPT_V3_unfiltered_cleaned_split.json \
         --num-prompts 100 --max-concurrency 100
 
+Sonnet (Prefix Caching)
+-----------------------
+
+The sonnet dataset uses Shakespeare's sonnets with a shared prefix across all prompts.
+This tests prefix caching — if enabled, the shared prefix KV cache is computed once and
+reused across requests, reducing TTFT.
+
+.. code-block:: bash
+
+    # vLLM - prefill-heavy (short output isolates prefill)
+    vllm bench serve --dataset-name sonnet --dataset-path sonnet.txt \
+        --sonnet-input-len 550 --sonnet-output-len 150 --sonnet-prefix-len 200 \
+        --num-prompts 100 --request-rate inf
+
+    # vLLM - realistic load
+    vllm bench serve --dataset-name sonnet --dataset-path sonnet.txt \
+        --sonnet-input-len 550 --sonnet-output-len 150 --sonnet-prefix-len 200 \
+        --num-prompts 100 --request-rate 4
+
+Both ShareGPT and sonnet are used by the vLLM team's
+`v0.6.0 performance blog <https://blog.vllm.ai/2024/09/05/perf-update.html>`__ to
+benchmark serving engines. To learn more about the methodology, see the
+`reproduction steps <https://github.com/vllm-project/vllm/issues/8176>`__ and SGLang's
+`counter-benchmark <https://github.com/sgl-project/sglang/blob/main/benchmark/benchmark_vllm_060/README.md>`__,
+which uses ``sglang.bench_serving`` to compare both engines:
+
+.. code-block:: bash
+
+    # Launch servers
+    # vLLM with multi-step scheduling
+    python -m vllm.entrypoints.openai.api_server \
+        --model meta-llama/Llama-3.1-8B-Instruct \
+        --disable-log-requests --num-scheduler-steps 10 --max_model_len 4096
+
+    # SGLang
+    python -m sglang.launch_server \
+        --model-path meta-llama/Llama-3.1-8B-Instruct \
+        --enable-torch-compile --disable-radix-cache
+
+    # Online benchmark (realistic load)
+    python3 -m sglang.bench_serving --backend sglang --dataset-name sharegpt \
+        --num-prompts 1200 --request-rate 4
+    python3 -m sglang.bench_serving --backend vllm --dataset-name sharegpt \
+        --num-prompts 1200 --request-rate 4
+
+    # Offline benchmark (max throughput)
+    python3 -m sglang.bench_serving --backend sglang --dataset-name sharegpt \
+        --num-prompts 5000
+    python3 -m sglang.bench_serving --backend vllm --dataset-name sharegpt \
+        --num-prompts 5000
+
 Key Metrics
 -----------
 
