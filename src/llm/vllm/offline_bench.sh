@@ -62,7 +62,7 @@ load_or_pull_image() {
 launch_container() {
   local cmd="$1"
   _run "
-        docker run --rm --gpus all --ipc=host --net=host \
+        docker run --rm --gpus all --privileged --ipc=host --net=host \
             -v '${PWD}:${PWD}' -w '${PWD}' \
             -v '${CONTAINER_MOUNT}:${CONTAINER_MOUNT}' \
             --entrypoint bash '${CONTAINER_IMAGE}' \
