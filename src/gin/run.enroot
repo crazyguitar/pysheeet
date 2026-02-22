@@ -1,0 +1,43 @@
+#!/bin/bash
+# Launch command inside enroot container via srun + pyxis
+# Usage: salloc -N 2 ./run.enroot <command...>
+
+set -exo pipefail
+
+DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+SQSH="${SQSH:-${DIR}/nccl+latest.sqsh}"
+MOUNT="/fsx:/fsx"
+
+master_addr=$(scontrol show hostnames $SLURM_JOB_NODELIST 2>/dev/null | head -n1)
+master_addr=$(getent hosts "${master_addr}" 2>/dev/null | awk '{print $1}' || echo "${master_addr}")
+master_addr=${master_addr:-127.0.0.1}
+
+cmd="$(cat <<EOF
+export LD_LIBRARY_PATH=/opt/amazon/ofi-nccl/lib:/opt/nccl/build/lib:/opt/amazon/efa/lib:\$LD_LIBRARY_PATH
+export LD_PRELOAD=/opt/nccl/build/lib/libnccl.so.2
+export FI_PROVIDER=efa
+export FI_EFA_USE_DEVICE_RDMA=1
+export FI_EFA_FORK_SAFE=1
+export NCCL_NET_PLUGIN=/opt/amazon/ofi-nccl/lib/libnccl-net-ofi.so
+export NCCL_TUNER_PLUGIN=/opt/amazon/ofi-nccl/lib/libnccl-tuner-ofi.so
+export NCCL_DEBUG=WARN
+export NCCL_BUFFSIZE=8388608
+export NCCL_P2P_NET_CHUNKSIZE=524288
+export OMP_NUM_THREADS=1
+export MASTER_ADDR=${master_addr}
+export MASTER_PORT=29500
+export DEEP_EP_BACKEND=nccl
+export NCCL_GIN_TYPE=2
+export TORCH_DISTRIBUTED_BACKEND=nccl
+export WORLD_SIZE=${SLURM_NNODES:-2}
+export RANK=\${SLURM_NODEID:-0}
+$@
+EOF
+)"
+
+srun --container-image "${SQSH}" \
+  --container-mounts "${MOUNT}" \
+  --container-name nccl \
+  --mpi=pmix \
+  --ntasks-per-node=8 \
+  bash -c "${cmd}"
