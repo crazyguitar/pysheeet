@@ -158,14 +158,18 @@ Monitoring EFA with Nsys and EFA Metrics
 
 Nsys (NVIDIA Nsight Systems) provides comprehensive profiling of GPU kernels,
 CUDA API calls, and network operations. The ``--enable efa_metrics`` flag
-instructs Nsys to collect EFA adapter statistics in real-time, including:
+instructs Nsys to collect EFA adapter statistics in real-time from the EFA
+device counters (e.g., rdmap113s0, rdmap114s0) at 10Hz sampling rate, including:
 
-- **Packet Counters**: Packets sent and received per second
-- **RDMA Operations**: Read and write operation counts
+- **TX/RX Bandwidth**: Transmit and receive throughput
+- **TX/RX Packets**: Packet counts sent and received
+- **Error Counters**: Link errors and dropped packets
 
-These metrics are embedded in the Nsys timeline and correlated with GPU kernel
-execution and NCCL operations, making it easy to identify communication
-bottlenecks and validate network saturation.
+Additionally, aws-ofi-nccl uses NVTX annotations to mark NCCL operations in the
+timeline, allowing correlation between NCCL collective calls and EFA network
+activity. These metrics are embedded in the Nsys timeline and correlated with
+GPU kernel execution and NCCL operations, making it easy to identify
+communication bottlenecks and validate network saturation.
 
 To profile a Megatron training run with Nsys and capture EFA metrics:
 
@@ -235,7 +239,7 @@ or Chrome's ``chrome://tracing`` interface. By enabling ``log_torch``, Viztracer
 can capture additional PyTorch-level details such as NCCL stream and CUDA stream
 operations, providing visibility into the execution flow of collective
 communications and GPU kernels. However, to observe detailed EFA adapter
-statistics (bandwidth, packet rates, RDMA operations), Nsys with
+statistics (bandwidth, packet counts, error counters), Nsys with
 ``--enable efa_metrics`` remains the required tool.
 
 Example: Multi-Node Training with Custom Overrides
