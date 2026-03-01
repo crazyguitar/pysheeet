@@ -49,10 +49,11 @@ This guide assumes the following environment:
 - NCCL >= v2.29.3-1 with Device API support
 - aws-ofi-nccl plugin with GIN support
 - Megatron-LM with Megatron Bridge
-- Deepep monitoring tools installed
 
-For building NCCL and aws-ofi-nccl from source, refer to the `NCCL GIN article
-<https://github.com/crazyguitar/pysheeet/blob/master/docs/notes/appendix/nccl-gin.rst>`_
+We have demonstrated how to use vLLM with NCCL GIN and DeepEP in a previous
+article. If you are interested in building NCCL and aws-ofi-nccl from source,
+refer to the `NCCL GIN article
+<https://www.pythonsheets.com/notes/appendix/nccl-gin.html>`_
 in this repository.
 
 Building the Megatron Container
