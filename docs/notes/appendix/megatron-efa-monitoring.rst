@@ -291,5 +291,4 @@ repository.
 References
 ----------
 
-.. [1] AWS re:Invent 2024, "Drilling down into performance for distributed training"
-   https://d1.awsstatic.com/onedam/marketing-channels/website/aws/en_US/events/approved/reinvent-2025/reinvent/2024/slides/cmp/CMP335_Drilling-down-into-performance-for-distributed-training.pdf
+.. [1] `AWS re:Invent 2024 - CMP335: Drilling down into performance for distributed training <https://d1.awsstatic.com/onedam/marketing-channels/website/aws/en_US/events/approved/reinvent-2025/reinvent/2024/slides/cmp/CMP335_Drilling-down-into-performance-for-distributed-training.pdf>`_
