@@ -178,7 +178,7 @@ To profile a Megatron training run with Nsys and capture EFA metrics:
 .. code-block:: bash
 
     cd src/megatron
-    salloc -N 2
+    salloc -N 8
 
     ./srun.sh --nsys recipes/deepseek_v2_lite_pretrain.py \
         hf_path=/fsx/models/deepseek-ai/DeepSeek-V2-Lite \
@@ -231,6 +231,7 @@ performance.
     salloc -N 2
     ./srun.sh recipes/deepseek_v2_lite_pretrain.py \
         hf_path=/fsx/models/deepseek-ai/DeepSeek-V2-Lite \
+        train.train_iters=100 \
         profiling.use_viztracer=true \
         profiling.profile_step_start=10 \
         profiling.profile_step_end=15 \
@@ -243,29 +244,6 @@ operations, providing visibility into the execution flow of collective
 communications and GPU kernels. However, to observe detailed EFA adapter
 statistics (bandwidth, packet counts, error counters), Nsys with
 ``--enable efa_metrics`` remains the required tool.
-
-Example: Multi-Node Training with Custom Overrides
----------------------------------------------------
-
-Megatron Bridge recipes support Hydra-style configuration overrides, allowing
-you to customize training parameters without modifying the recipe file:
-
-.. code-block:: bash
-
-    salloc -N 8
-    ./srun.sh recipes/deepseek_v2_lite_pretrain.py \
-        hf_path=/fsx/models/deepseek-ai/DeepSeek-V2-Lite \
-        moe_token_dispatcher_type=deepep \
-        model.tensor_model_parallel_size=1 \
-        model.expert_model_parallel_size=64 \
-        model.sequence_parallel=false \
-        train.train_iters=1000 \
-        train.global_batch_size=128 \
-        train.lr_warmup_iters=100
-
-This flexibility makes it easy to experiment with different configurations and
-parallelism strategies without rebuilding the container or modifying source
-code.
 
 Conclusion
 ----------
