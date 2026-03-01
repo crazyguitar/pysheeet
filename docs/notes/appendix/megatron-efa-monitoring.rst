@@ -213,7 +213,7 @@ in Nsight Systems GUI for analysis. The EFA metrics appear as additional rows
 in the timeline view, showing bandwidth and packet rate correlated with GPU
 kernel execution and NCCL collective operations.
 
-.. image:: /_static/appendix/deepep-nsys.png
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/master/docs/_static/appendix/deepep-nsys.png
 
 Profiling with Viztracer
 -------------------------
