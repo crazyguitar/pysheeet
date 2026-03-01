@@ -1,5 +1,5 @@
-Monitoring EFA Performance in Megatron with NCCL GIN and Nsys
-==============================================================
+Monitoring EFA with NCCL GIN and Nsys
+======================================
 
 Abstract
 --------
