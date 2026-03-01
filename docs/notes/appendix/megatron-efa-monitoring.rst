@@ -17,12 +17,12 @@ The techniques presented here are based on best practices from AWS re:Invent
 Introduction
 ------------
 
-Megatron-LM is a widely adopted framework for training large transformer models
-using model parallelism, pipeline parallelism, and data parallelism. When
-deployed on AWS instances with EFA, the network fabric provides high-bandwidth,
-low-latency communication essential for scaling to hundreds or thousands of
-GPUs. However, achieving peak performance requires careful tuning and
-monitoring of the communication layer.
+`Megatron-LM <https://github.com/NVIDIA/Megatron-LM>`_ is a widely adopted
+framework for training large transformer models using model parallelism,
+pipeline parallelism, and data parallelism. When deployed on AWS instances with
+EFA, the network fabric provides high-bandwidth, low-latency communication
+essential for scaling to hundreds or thousands of GPUs. However, achieving peak
+performance requires careful tuning and monitoring of the communication layer.
 
 NCCL GPU-Initiated Networking allows GPUs to initiate network operations
 directly without CPU involvement, reducing latency and enabling kernel fusion.
@@ -34,11 +34,12 @@ correlated with GPU execution timelines. This enables practitioners to diagnose
 performance issues and validate that the network is operating at expected
 capacity.
 
-Megatron Bridge simplifies the configuration and deployment of Megatron-LM
-training jobs by providing a high-level recipe-based interface. This eliminates
-the need to manually construct complex command-line arguments and makes it
-easier to enable advanced features like NCCL GIN and DeepEP for MoE models.
-Therefore, the tutorial in this article will use Megatron Bridge.
+`Megatron Bridge <https://github.com/NVIDIA/Megatron-LM/tree/main/megatron/bridge>`_
+simplifies the configuration and deployment of Megatron-LM training jobs by
+providing a high-level recipe-based interface. This eliminates the need to
+manually construct complex command-line arguments and makes it easier to enable
+advanced features like NCCL GIN and DeepEP for MoE models. Therefore, the
+tutorial in this article will use Megatron Bridge.
 
 Prerequisites
 -------------
@@ -48,7 +49,7 @@ This guide assumes the following environment:
 - AWS HyperPod or EC2 instances with EFA support (e.g., P5, P5e, P5en)
 - NCCL >= v2.29.3-1 with Device API support
 - aws-ofi-nccl plugin with GIN support
-- Megatron-LM with Megatron Bridge
+- `Megatron-LM <https://github.com/NVIDIA/Megatron-LM>`_ with `Megatron Bridge <https://github.com/NVIDIA/Megatron-LM/tree/main/megatron/bridge>`_
 
 We have demonstrated how to use vLLM with NCCL GIN and DeepEP in a previous
 article. If you are interested in building NCCL and aws-ofi-nccl from source,
