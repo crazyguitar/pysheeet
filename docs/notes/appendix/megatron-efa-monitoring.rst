@@ -49,7 +49,7 @@ This guide assumes the following environment:
 - AWS HyperPod or EC2 instances with EFA support (e.g., P5, P5e, P5en)
 - NCCL >= v2.29.3-1 with Device API support
 - aws-ofi-nccl plugin with GIN support
-- `Megatron-LM <https://github.com/NVIDIA/Megatron-LM>`_ with `Megatron Bridge <https://github.com/NVIDIA/Megatron-LM/tree/main/megatron/bridge>`_
+- Megatron-LM with Megatron-Bridge
 
 We have demonstrated how to use vLLM with NCCL GIN and DeepEP in a previous
 article. If you are interested in building NCCL and aws-ofi-nccl from source,
