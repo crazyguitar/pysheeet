@@ -252,7 +252,7 @@ you to customize training parameters without modifying the recipe file:
 
 .. code-block:: bash
 
-    salloc -N 4
+    salloc -N 8
     ./srun.sh recipes/deepseek_v2_lite_pretrain.py \
         hf_path=/fsx/models/deepseek-ai/DeepSeek-V2-Lite \
         moe_token_dispatcher_type=deepep \
