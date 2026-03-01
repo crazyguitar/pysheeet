@@ -19,3 +19,4 @@ More advanced topics and examples can be found in the following link.
     python-walrus
     python-gdb
     nccl-gin
+    megatron-efa-monitoring

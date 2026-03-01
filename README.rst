@@ -188,6 +188,7 @@ language features that don't fit elsewhere.
 - `PEP 572 and the walrus operator <docs/notes/appendix/python-walrus.rst>`_
 - `Python Interpreter in GNU Debugger <docs/notes/appendix/python-gdb.rst>`_
 - `GPU-Initiated Networking for NCCL on AWS <docs/notes/appendix/nccl-gin.rst>`_
+- `Monitoring EFA with NCCL GIN and Nsys <docs/notes/appendix/megatron-efa-monitoring.rst>`_
 
 PDF Version
 ============
