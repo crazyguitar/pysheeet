@@ -39,7 +39,7 @@ performance. The following figure illustrates how ``async/await`` enables
 handling socket connections with the simplicity of threads but the efficiency
 of event loops.
 
-.. image:: ../../_static/appendix/event-loop-vs-thread.png
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/master/docs/_static/appendix/event-loop-vs-thread.png
 
 Introduction
 ------------
