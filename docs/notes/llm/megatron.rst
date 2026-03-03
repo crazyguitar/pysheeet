@@ -9,16 +9,17 @@ Megatron-LM
 .. contents:: Table of Contents
     :backlinks: none
 
-`Megatron-LM <https://github.com/NVIDIA/Megatron-LM/tree/main>`_ and
-`Megatron Bridge <https://github.com/NVIDIA-NeMo/Megatron-Bridge/tree/main>`_
-provides a recipe-based interface for configuring and launching Megatron-LM pretrain
-jobs. Instead of passing dozens of CLI flags, you define a Python recipe that returns a
-config object, and an entrypoint script handles the rest. Recipes can load HuggingFace
-pretrained weights directly via the ``hf_path`` parameter, so you can start from any
-checkpoint on the `HuggingFace Hub <https://huggingface.co/models>`_ without manual
-conversion.
+`Megatron-LM <https://github.com/NVIDIA/Megatron-LM/tree/main>`_ is NVIDIA's framework
+for training and fine-tuning large transformer models with tensor, pipeline, and expert
+parallelism. `Megatron Bridge <https://github.com/NVIDIA-NeMo/Megatron-Bridge/tree/main>`_
+sits on top of Megatron-LM and provides a recipe-based interface — instead of passing
+dozens of CLI flags, you write a short Python recipe that returns a config object.
+Recipes can load `HuggingFace <https://huggingface.co/models>`_ pretrained weights
+directly via the ``hf_path`` parameter, so you can start from any checkpoint without
+manual conversion.
 
-The examples below use the scripts in
+In this note, we demonstrate how to use Megatron Bridge to load HuggingFace pretrained
+weights and train with Megatron-LM. The examples use the scripts in
 `src/megatron <https://github.com/crazyguitar/pysheeet/blob/master/src/megatron>`__.
 
 How to Use Megatron Bridge
