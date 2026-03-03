@@ -14,5 +14,6 @@ serving performance.
    :maxdepth: 1
 
    pytorch
+   megatron
    llm-serving
    llm-bench

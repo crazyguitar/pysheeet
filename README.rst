@@ -166,6 +166,7 @@ for model development, distributed training across GPUs, and vLLM/SGLang for
 high-performance LLM inference and serving.
 
 - `PyTorch <docs/notes/llm/pytorch.rst>`_ - Tensors, autograd, neural networks, training loops
+- `Megatron <docs/notes/llm/megatron.rst>`_ - NVIDIA Megatron training/fine-tuning framework with enroot/pyxis
 - `LLM Serving <docs/notes/llm/llm-serving.rst>`_ - vLLM and SGLang for production inference with TP/PP/DP/EP
 - `LLM Benchmark <docs/notes/llm/llm-bench.rst>`_ - Benchmark suite for measuring serving performance
 
