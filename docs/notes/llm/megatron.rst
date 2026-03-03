@@ -2,14 +2,15 @@
     :description lang=en: Megatron Bridge cheat sheet — pretrain recipes, Nsys profiling, and distributed training on SLURM with EFA.
     :keywords: Megatron, Megatron-LM, Megatron Bridge, distributed training, pretrain, Nsys, profiling, EFA, SLURM, DeepSeek, MoE, NCCL, GPU, LLM
 
-===============
-Megatron Bridge
-===============
+===========
+Megatron-LM
+===========
 
 .. contents:: Table of Contents
     :backlinks: none
 
-`Megatron Bridge <https://github.com/NVIDIA/Megatron-LM/tree/main/megatron/bridge>`_
+`Megatron-LM <https://github.com/NVIDIA/Megatron-LM/tree/main>`_ and
+`Megatron Bridge <https://github.com/NVIDIA-NeMo/Megatron-Bridge/tree/main>`_
 provides a recipe-based interface for configuring and launching Megatron-LM pretrain
 jobs. Instead of passing dozens of CLI flags, you define a Python recipe that returns a
 config object, and an entrypoint script handles the rest. Recipes can load HuggingFace
