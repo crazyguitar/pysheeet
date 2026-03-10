@@ -216,7 +216,7 @@ workload shifts from prefill-heavy to decode-heavy.
 Output Token Throughput
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-.. image:: /_static/appendix/nixl/throughput.png
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/master/docs/_static/appendix/nixl/throughput.png
     :alt: Output token throughput comparison
 
 The left panel varies input length with a fixed output length of 256 tokens
@@ -236,7 +236,7 @@ cannot match the decode capacity of other configurations.
 Request Throughput
 ~~~~~~~~~~~~~~~~~~
 
-.. image:: /_static/appendix/nixl/req_throughput.png
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/master/docs/_static/appendix/nixl/req_throughput.png
     :alt: Request throughput comparison
 
 Request throughput follows a similar pattern. Route 4 consistently achieves the
@@ -248,7 +248,7 @@ node becomes saturated.
 Time to First Token (TTFT)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. image:: /_static/appendix/nixl/ttft.png
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/master/docs/_static/appendix/nixl/ttft.png
     :alt: TTFT comparison
 
 TTFT is critical for user-perceived latency. The baseline DP and Route 2
@@ -268,7 +268,7 @@ show competitive TTFT since the input length is fixed at 512 tokens.
 Inter-Token Latency (ITL)
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. image:: /_static/appendix/nixl/itl.png
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/master/docs/_static/appendix/nixl/itl.png
     :alt: ITL comparison
 
 ITL measures the latency between consecutive generated tokens during the decode
