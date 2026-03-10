@@ -16,7 +16,8 @@ More advanced topics and examples can be found in the following link.
 .. toctree::
     :maxdepth: 1
 
+    disaggregated-prefill-decode
+    megatron-efa-monitoring
+    nccl-gin
     python-walrus
     python-gdb
-    nccl-gin
-    megatron-efa-monitoring

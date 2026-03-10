@@ -3,6 +3,8 @@
 GPU-Initiated Networking for NCCL on AWS
 ========================================
 
+:Date: 2026-02-22
+
 Abstract
 --------
 
