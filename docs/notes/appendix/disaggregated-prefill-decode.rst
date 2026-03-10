@@ -1,19 +1,23 @@
-Disaggregated Prefill/Decode with NIXL on AWS
-==============================================
+Is Disaggregated Prefill/Decode a Silver Bullet for LLM Serving?
+================================================================
 
 :Date: 2026-03-10
 
 Abstract
 --------
 
-Disaggregated prefill/decode is an emerging serving architecture that separates
-the compute-intensive prefill phase from the memory-bound decode phase onto
-dedicated node groups, enabling independent scaling and improved resource
-utilization. This article evaluates disaggregated prefill/decode using vLLM with
-NIXL over the AWS Elastic Fabric Adapter (EFA) on a 4-node cluster. We compare
-data parallelism as a baseline against disaggregated configurations and examine
-the trade-offs in throughput, time-to-first-token (TTFT), and inter-token
-latency (ITL) across varying input and output sequence lengths.
+Disaggregated prefill/decode has gained traction as a promising architecture for
+LLM serving, separating the compute-intensive prefill phase from the
+memory-bound decode phase onto dedicated node groups. Proponents argue that this
+separation enables independent scaling and eliminates interference between the
+two phases. But is it truly a silver bullet? This article puts the claim to the
+test by evaluating disaggregated prefill/decode using vLLM with NIXL over the
+AWS Elastic Fabric Adapter (EFA) on a 4-node cluster. We compare data
+parallelism and simple load-balanced routing as baselines against disaggregated
+configurations. Our results show that while disaggregation dramatically reduces
+inter-token latency (ITL), it comes at a significant cost to throughput and
+time-to-first-token (TTFT), revealing that the architecture is far from a
+universal solution.
 
 Introduction
 ------------
@@ -32,10 +36,17 @@ interconnect. NIXL [1]_ (NVIDIA Inference Xfer Library) provides the KV cache
 transfer mechanism, and on AWS, this transfer occurs over EFA using the
 ``LIBFABRIC`` backend.
 
+The appeal is intuitive: by isolating decode nodes from prefill interference,
+token generation should proceed at a steady, low-latency pace. However, this
+separation introduces new costs — KV cache transfer overhead, prefill node
+saturation at long input lengths, and reduced effective cluster capacity for
+each phase. The question is whether these trade-offs are worthwhile compared to
+simpler alternatives like data parallelism or stateless load-balanced routing.
+
 This experiment uses vLLM [2]_ with the
-``NixlConnector`` to orchestrate disaggregated serving, and ``vllm-router`` as
+``NixlConnector`` to orchestrate disaggregated serving, and ``vllm-router`` [3]_ as
 a reverse proxy to load-balance requests across node groups. The experiment
-code is available under ``src/nixl`` in the companion repository.
+code is available under `src/nixl <https://github.com/crazyguitar/pysheeet/tree/master/src/nixl>`_ in the companion repository.
 
 Container Image
 ---------------
@@ -100,7 +111,23 @@ vLLM process with explicit KV transfer configuration:
 The router uses ``round_robin`` policy for pure-DP groups and
 ``consistent_hash`` with ``--vllm-pd-disaggregation`` for PD groups, directing
 initial requests to prefill endpoints and subsequent decode traffic to decode
-endpoints.
+endpoints:
+
+.. code-block:: bash
+
+    # Router for pure-DP groups (round-robin across group endpoints)
+    vllm-router \
+        --policy round_robin \
+        --worker-urls http://<GROUP0_IP>:8000 http://<GROUP1_IP>:8001 \
+        --host 0.0.0.0 --port 8010
+
+    # Router for PD disaggregation (consistent hash with prefill/decode split)
+    vllm-router \
+        --policy consistent_hash \
+        --vllm-pd-disaggregation \
+        --prefill http://<PREFILL0_IP>:8000 \
+        --decode http://<DECODE0_IP>:8001 --decode http://<DECODE1_IP>:8002 \
+        --host 0.0.0.0 --port 8010
 
 Each container is launched with ``--privileged``, ``--net=host``, and explicit
 ``/dev/infiniband/uverbs*`` and ``/dev/gdrdrv`` device mounts to enable
@@ -174,6 +201,14 @@ The configurations are:
 Results
 -------
 
+We evaluate each configuration along four metrics: output token throughput,
+request throughput, time to first token (TTFT), and inter-token latency (ITL).
+Each plot contains two panels — the left panel sweeps input length with a fixed
+output length of 256 tokens (prefill-dominated regime), while the right panel
+sweeps output length with a fixed input length of 512 tokens (decode-dominated
+regime). This allows us to observe how each configuration behaves when the
+workload shifts from prefill-heavy to decode-heavy.
+
 Output Token Throughput
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -190,9 +225,9 @@ coordination. The disaggregated configurations (PD 1P3D and PD 2P2D) show
 competitive throughput at shorter input lengths but degrade at longer inputs
 where the prefill nodes become the bottleneck.
 
-For decode-dominated workloads, Route 4 again leads, followed by PD 1P3D. The
-baseline DP configuration shows the lowest throughput due to synchronization
-overhead across all 4 nodes.
+For decode-dominated workloads, Route 4 again leads, followed by PD 1P3D.
+PD 2P2D shows the lowest throughput in this regime, as its two decode nodes
+cannot match the decode capacity of other configurations.
 
 Request Throughput
 ~~~~~~~~~~~~~~~~~~
@@ -247,28 +282,63 @@ input lengths where prefill and decode contend for the same GPU resources.
 Discussion
 ----------
 
-The results reveal a fundamental trade-off in disaggregated prefill/decode
-serving:
+So, is disaggregated prefill/decode a silver bullet? The answer is clearly no —
+at least not under the conditions tested here. All benchmarks use randomly
+generated prompts, meaning every request produces a unique KV cache with zero
+prefix cache hit rate. This represents a worst-case scenario for disaggregated
+serving, where every prefill must be computed from scratch and the full KV cache
+must be transferred over the network. In production workloads with shared system
+prompts or repeated prefixes, prefix caching on prefill nodes could
+substantially reduce redundant computation and transfer volume, potentially
+shifting the balance in favor of disaggregation. Even so, the results reveal a
+set of sharp trade-offs that make disaggregation a specialized tool rather than
+a universal improvement:
 
-- **Throughput vs. latency**: Disaggregated configurations sacrifice overall
-  throughput and TTFT in exchange for significantly lower ITL. This trade-off
-  is favorable for interactive applications where consistent token generation
-  speed matters more than time-to-first-token.
+- **ITL wins, but throughput depends on scaling**: Disaggregated configurations
+  deliver dramatically lower inter-token latency — PD 1P3D achieves as low as
+  10 ms ITL at long input lengths, up to 14× better than the baseline in
+  prefill-dominated regimes and 1.4–2.4× better in decode-dominated regimes.
+  The throughput and TTFT degradation observed here is partly an artifact of a
+  fixed 4-node cluster: dedicating nodes to one role starves the other. In
+  practice, prefill and decode pools can be scaled independently — adding more
+  prefill nodes to eliminate the prefill bottleneck, or more decode nodes to
+  increase token throughput. The challenge is finding the right ratio between
+  prefill and decode capacity for a given workload, as over-provisioning either
+  side increases cost without proportional benefit.
 
-- **Prefill bottleneck**: With a fixed cluster size, dedicating nodes to prefill
-  reduces decode capacity and vice versa. PD 1P3D suffers from prefill
-  saturation at long input lengths, while PD 2P2D has fewer decode nodes,
-  limiting decode throughput.
+- **Prefill bottleneck is a hard constraint**: With a fixed cluster size,
+  dedicating nodes to prefill reduces decode capacity and vice versa. PD 1P3D
+  suffers severe prefill saturation at long input lengths (TTFT > 37s at 4096
+  tokens), while PD 2P2D has fewer decode nodes, limiting decode throughput.
+  Frameworks such as `NVIDIA Dynamo <https://github.com/ai-dynamo/dynamo>`_
+  aim to address this by dynamically scaling prefill and decode pools based on
+  real-time demand, though this adds operational complexity.
 
-- **Routing without disaggregation**: Route 4 (pure routing, no DP) achieves
-  the best throughput and TTFT by eliminating cross-node synchronization
-  entirely. This suggests that for workloads where ITL is not the primary
-  concern, simple load-balanced independent nodes outperform both DP and
+- **Simple routing beats disaggregation on throughput**: Route 4 (pure routing,
+  no DP, no disaggregation) consistently achieves the highest throughput across
+  all configurations by eliminating cross-node synchronization entirely. It also
+  achieves the lowest TTFT in prefill-dominated workloads, though PD 1P3D edges
+  it out on TTFT in decode-dominated regimes where the fixed 512-token input is
+  short enough to avoid prefill saturation. This is a surprisingly strong
+  baseline — for workloads where ITL is not the primary concern, stateless
+  load-balanced independent nodes outperform both data parallelism and
   disaggregated configurations.
 
-- **KV cache transfer overhead**: The NIXL transfer over EFA adds latency to
-  TTFT in disaggregated configurations. This overhead is amortized for longer
-  decode sequences but is noticeable for short output lengths.
+- **KV cache transfer is not free**: The NIXL transfer over EFA adds measurable
+  latency to TTFT in disaggregated configurations. This overhead is amortized
+  for longer decode sequences but is noticeable for short output lengths,
+  making disaggregation less attractive for short-response workloads.
+
+In summary, disaggregated prefill/decode aims to optimize both TTFT and ITL by
+isolating the two phases, but achieving these goals is not guaranteed. KV cache
+transfer over the network introduces additional overhead that can negate the
+TTFT benefit, particularly at long input lengths where the transfer volume is
+large. While ITL improvements are consistently observed due to the elimination
+of prefill interference on decode nodes, the overall serving performance depends
+heavily on the prefill-to-decode ratio, workload characteristics, and network
+bandwidth. Teams considering this architecture should carefully profile their
+input/output length distributions, latency SLAs, and throughput requirements
+before committing to the added complexity.
 
 References
 ----------
@@ -278,3 +348,6 @@ References
 
 .. [2] vLLM Project, "vLLM: Easy, fast, and cheap LLM serving," GitHub, 2024.
    https://github.com/vllm-project/vllm
+
+.. [3] vLLM Project, "vllm-router: Production-ready router for vLLM," GitHub, 2025.
+   https://github.com/vllm-project/vllm-router
