@@ -6,6 +6,8 @@
 PEP 572 and The Walrus Operator
 ===============================
 
+:Date: 2025-08-30
+
 Abstract
 --------
 
