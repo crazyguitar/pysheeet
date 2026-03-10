@@ -1,3 +1,7 @@
+.. meta::
+    :description lang=en: Evaluating disaggregated prefill/decode for LLM serving with vLLM, NIXL, and EFA on AWS
+    :keywords: LLM, vLLM, NIXL, disaggregated prefill decode, KV cache, EFA, inference serving
+
 Is Disaggregated Prefill/Decode a Silver Bullet for LLM Serving?
 ================================================================
 

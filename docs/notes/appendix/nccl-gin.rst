@@ -1,4 +1,7 @@
 
+.. meta::
+    :description lang=en: Enabling GPU-Initiated Networking for NCCL with DeepEP on AWS using EFA
+    :keywords: NCCL, GIN, GPU-Initiated Networking, DeepEP, EFA, AWS, MoE, HyperPod
 
 GPU-Initiated Networking for NCCL on AWS
 ========================================

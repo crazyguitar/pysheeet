@@ -1,3 +1,7 @@
+.. meta::
+    :description lang=en: Monitoring EFA network performance with NCCL GIN and Nsys during distributed LLM training on AWS
+    :keywords: EFA, NCCL, GIN, Nsys, Megatron-LM, distributed training, network monitoring, AWS
+
 Monitoring EFA with NCCL GIN and Nsys
 ======================================
 
