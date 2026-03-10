@@ -274,14 +274,21 @@ Inter-Token Latency (ITL)
 ITL measures the latency between consecutive generated tokens during the decode
 phase. This is where disaggregated serving shows its primary advantage.
 
-PD 1P3D achieves the lowest ITL across nearly all configurations, with mean ITL
-as low as 10 ms at longer input lengths. By isolating decode nodes from prefill
-interference, the decode phase runs uninterrupted. PD 2P2D also shows reduced
-ITL compared to the baseline, though the benefit is less pronounced due to
-having fewer decode nodes.
+In the prefill-dominated regime (left panel), PD 1P3D achieves the lowest ITL
+across all input lengths, with mean ITL as low as 10 ms at 4096 input tokens.
+By isolating decode nodes from prefill interference, the decode phase runs
+uninterrupted. PD 2P2D also shows reduced ITL compared to the baseline, though
+the benefit is less pronounced due to having fewer decode nodes. The baseline DP
+and Route configurations show higher ITL, particularly at longer input lengths
+where prefill and decode contend for the same GPU resources.
 
-The baseline DP and Route configurations show higher ITL, particularly at longer
-input lengths where prefill and decode contend for the same GPU resources.
+In the decode-dominated regime (right panel), Route 4 achieves the lowest ITL
+(~25–29 ms) since each node serves independently without cross-node
+coordination. Among the disaggregated configurations, PD 1P3D outperforms
+PD 2P2D due to its greater decode capacity (3 decode nodes vs. 2), maintaining
+ITL around 26–35 ms. PD 2P2D, with only 2 decode nodes, shows ITL comparable
+to the baseline (~45–50 ms). As output length increases, ITL gradually rises
+across all configurations, reflecting the growing decode load.
 
 Discussion
 ----------
