@@ -262,8 +262,13 @@ as all prefill work funnels through a single node. PD 2P2D improves on this
 but still lags behind the non-disaggregated configurations. The additional
 latency from KV cache transfer over NIXL contributes to the elevated TTFT.
 
-For decode-dominated workloads (right panel), the disaggregated configurations
-show competitive TTFT since the input length is fixed at 512 tokens.
+For decode-dominated workloads (right panel), the differences are smaller. At
+short output lengths (256–512 tokens), PD 1P3D shows 1–2 seconds higher TTFT
+than the baseline, as the KV cache transfer overhead is proportionally more
+significant. At longer output lengths (1024+ tokens), the disaggregated
+configurations converge with or improve upon the baseline, as the baseline
+suffers from increased prefill/decode contention under heavier concurrent
+decode load.
 
 Inter-Token Latency (ITL)
 ~~~~~~~~~~~~~~~~~~~~~~~~~
