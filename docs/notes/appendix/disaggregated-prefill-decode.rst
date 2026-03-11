@@ -205,6 +205,14 @@ The configurations are:
 Results
 -------
 
+We evaluate each configuration along four metrics: output token throughput,
+request throughput, time to first token (TTFT), and inter-token latency (ITL).
+Each plot contains two panels — the left panel sweeps input length with a fixed
+output length of 256 tokens (prefill-dominated regime), while the right panel
+sweeps output length with a fixed input length of 512 tokens (decode-dominated
+regime). This allows us to observe how each configuration behaves when the
+workload shifts from prefill-heavy to decode-heavy.
+
 Microbenchmark: KV Cache Transfer Bandwidth
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -249,14 +257,6 @@ approximately **15.2 MB**. With TP=8, each GPU transfers about **1.9 MB**,
 which falls in the ~121 GB/s bandwidth range per the table above. Without
 tensor parallelism, the full 15.2 MB transfer achieves approximately
 ~289 GB/s.
-
-We evaluate each configuration along four metrics: output token throughput,
-request throughput, time to first token (TTFT), and inter-token latency (ITL).
-Each plot contains two panels — the left panel sweeps input length with a fixed
-output length of 256 tokens (prefill-dominated regime), while the right panel
-sweeps output length with a fixed input length of 512 tokens (decode-dominated
-regime). This allows us to observe how each configuration behaves when the
-workload shifts from prefill-heavy to decode-heavy.
 
 Output Token Throughput
 ~~~~~~~~~~~~~~~~~~~~~~~
