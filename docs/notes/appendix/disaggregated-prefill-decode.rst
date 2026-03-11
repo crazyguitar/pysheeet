@@ -205,6 +205,51 @@ The configurations are:
 Results
 -------
 
+Microbenchmark: KV Cache Transfer Bandwidth
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Before examining end-to-end serving results, we use ``nixlbench`` to measure
+the raw NIXL transfer bandwidth over EFA between two nodes. This establishes
+an upper bound on KV cache transfer speed and helps contextualize the TTFT
+overhead observed in disaggregated configurations.
+
+The benchmark runs in Multi-GPU (MG) mode with all 8 GPUs per node performing
+VRAM-to-VRAM transfers over the ``LIBFABRIC`` backend:
+
+.. code-block:: bash
+
+    salloc -N 2 bash nixl.sbatch --backend LIBFABRIC \
+        --initiator_seg_type VRAM --target_seg_type VRAM \
+        --mode MG --num_initiator_dev 8 --num_target_dev 8
+
+    Block Size (B)      Batch Size     B/W (GB/Sec)   Avg Lat. (us)  P99 Tx (us)
+    ---------------------------------------------------------------------------------
+    4096                1              0.670064       6.1            47.0
+    8192                1              1.315392       6.2            45.0
+    16384               1              2.511416       6.5            47.0
+    32768               1              4.820423       6.8            50.0
+    65536               1              8.733224       7.5            56.0
+    131072              1              12.341950      10.6           52.0
+    262144              1              23.272188      11.3           59.0
+    524288              1              43.365764      12.1           62.0
+    1048576             1              74.816773      14.0           77.0
+    2097152             1              121.086563     17.3           105.0
+    4194304             1              180.631395     23.2           146.0
+    8388608             1              239.037623     35.1           247.0
+    16777216            1              289.500030     58.0           432.0
+    33554432            1              327.436372     102.5          796.0
+    67108864            1              349.608429     192.0          1724.0
+
+**Mapping to DeepSeek-V2-Lite KV cache transfer.** DeepSeek-V2-Lite uses
+Multi-head Latent Attention (MLA), which compresses the KV cache into a latent
+vector per token per layer. The per-token-per-layer KV cache size is
+``(kv_lora_rank + qk_rope_head_dim) × dtype_size = (512 + 64) × 2 = 1,152
+bytes``. For 512 input tokens across 27 layers, the total KV cache is
+approximately **15.2 MB**. With TP=8, each GPU transfers about **1.9 MB**,
+which falls in the ~121 GB/s bandwidth range per the table above. Without
+tensor parallelism, the full 15.2 MB transfer achieves approximately
+~289 GB/s.
+
 We evaluate each configuration along four metrics: output token throughput,
 request throughput, time to first token (TTFT), and inter-token latency (ITL).
 Each plot contains two panels — the left panel sweeps input length with a fixed
