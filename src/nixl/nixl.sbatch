@@ -81,12 +81,16 @@ launch_container() {
   "
 }
 
+LOGDIR="${WORKSPACE}/logs"
+
 cleanup() {
   info "Cleaning up..."
+  kill $(jobs -p) 2>/dev/null || true
   srun --ntasks-per-node=1 bash -c '
     docker ps -aq | xargs -r docker stop -t 10 2>/dev/null || true
     docker ps -aq | xargs -r docker rm -f 2>/dev/null || true
   ' 2>/dev/null || true
+  rm -f "${LOGDIR}"/nixlbench-*.log
 }
 
 trap cleanup EXIT
@@ -125,18 +129,20 @@ done
 sleep 3
 
 BENCH_ARGS_STR="${BENCH_ARGS[*]+"${BENCH_ARGS[*]}"}"
+mkdir -p "${LOGDIR}"
 
 # Start nixlbench on worker nodes
 for i in $(seq 1 $((NUM_NODES - 1))); do
   info "Starting nixlbench on ${NODES[$i]}..."
   srun --nodes=1 --nodelist="${NODES[$i]}" bash -c "
-    docker exec -d nixl-${i} bash -c 'nixlbench --etcd_endpoints ${ETCD_URL} ${BENCH_ARGS_STR} 2>&1 | tee /tmp/nixlbench.log'
+    docker exec -d nixl-${i} bash -c 'nixlbench --etcd_endpoints ${ETCD_URL} ${BENCH_ARGS_STR} 2>&1 | tee ${LOGDIR}/nixlbench-${NODES[$i]}.log'
   "
+  tail -f "${LOGDIR}/nixlbench-${NODES[$i]}.log" 2>/dev/null | sed "s/^/[${NODES[$i]}] /" &
   sleep 1
 done
 
 # Start nixlbench on head node (foreground)
 info "Starting nixlbench on ${HEAD_NODE}..."
 srun --nodes=1 --nodelist="${HEAD_NODE}" bash -c "
-  docker exec nixl-0 bash -c 'nixlbench --etcd_endpoints ${ETCD_URL} ${BENCH_ARGS_STR}'
+  docker exec nixl-0 bash -c 'nixlbench --etcd_endpoints ${ETCD_URL} ${BENCH_ARGS_STR} 2>&1 | tee ${LOGDIR}/nixlbench-${HEAD_NODE}.log'
 "
