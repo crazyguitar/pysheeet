@@ -180,8 +180,8 @@ Covers Slurm workload manager for distributed computing and GPU clusters.
 - `Slurm <docs/notes/hpc/slurm.rst>`_
 
 
-Appendix
-=========
+Blog
+====
 
 Supplementary topics covering Python internals, debugging techniques, and
 language features that don't fit elsewhere.

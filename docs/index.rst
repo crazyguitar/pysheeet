@@ -67,13 +67,4 @@ everyday tasks.
    notes/extension/index
    notes/llm/index
    notes/hpc/index
-
-Appendix
---------
-
-The appendix mainly focuses on some critical concepts missing in cheat sheets.
-
-.. toctree::
-   :maxdepth: 1
-
    notes/appendix/index
