@@ -251,12 +251,11 @@ VRAM-to-VRAM transfers over the ``LIBFABRIC`` backend:
 **Mapping to DeepSeek-V2-Lite KV cache transfer.** DeepSeek-V2-Lite uses
 Multi-head Latent Attention (MLA), which compresses the KV cache into a latent
 vector per token per layer. The per-token-per-layer KV cache size is
-``(kv_lora_rank + qk_rope_head_dim) × dtype_size = (512 + 64) × 2 = 1,152
-bytes``. For 512 input tokens across 27 layers, the total KV cache is
-approximately **15.2 MB**. With TP=8, each GPU transfers about **1.9 MB**,
-which falls in the ~121 GB/s bandwidth range per the table above. Without
-tensor parallelism, the full 15.2 MB transfer achieves approximately
-~289 GB/s.
+``(kv_lora_rank + qk_rope_head_dim) × dtype_size = (512 + 64) × 2 = 1,152 bytes``.
+For 512 input tokens across 27 layers, the total KV cache is approximately **15.2 MB**.
+With TP=8, each GPU transfers about **1.9 MB**, which falls in the ~121 GB/s
+bandwidth range per the table above. Without tensor parallelism, the full 15.2 MB
+transfer achieves approximately ~289 GB/s.
 
 Output Token Throughput
 ~~~~~~~~~~~~~~~~~~~~~~~
