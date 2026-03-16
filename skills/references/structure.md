@@ -9,7 +9,15 @@ Complete reference guide organized by topic, with direct links to live documenta
 - **Functions** → https://www.pythonsheets.com/notes/basic/python-func.html
 - **Lists** → https://www.pythonsheets.com/notes/basic/python-list.html
 - **Dictionaries** → https://www.pythonsheets.com/notes/basic/python-dict.html
+- **Sets** → https://www.pythonsheets.com/notes/basic/python-set.html
 - **Generators** → https://www.pythonsheets.com/notes/basic/python-generator.html
+- **Heap** → https://www.pythonsheets.com/notes/basic/python-heap.html
+- **Regular Expressions** → https://www.pythonsheets.com/notes/basic/python-rexp.html
+- **Unicode** → https://www.pythonsheets.com/notes/basic/python-unicode.html
+- **__future__** → https://www.pythonsheets.com/notes/basic/python-future.html
+
+## What's New
+- **What's New in Python 3** → https://www.pythonsheets.com/notes/python-new-py3.html
 
 ## System Programming
 - **Date/Time** → https://www.pythonsheets.com/notes/os/python-date.html
@@ -31,6 +39,7 @@ Complete reference guide organized by topic, with direct links to live documenta
 - **Socket Basics** → https://www.pythonsheets.com/notes/network/python-socket.html
 - **Socket Servers** → https://www.pythonsheets.com/notes/network/python-socket-server.html
 - **Async Sockets** → https://www.pythonsheets.com/notes/network/python-socket-async.html
+- **Packet Sniffer** → https://www.pythonsheets.com/notes/network/python-socket-sniffer.html
 - **SSL/TLS** → https://www.pythonsheets.com/notes/network/python-socket-ssl.html
 - **SSH** → https://www.pythonsheets.com/notes/network/python-ssh.html
 
@@ -52,9 +61,16 @@ Complete reference guide organized by topic, with direct links to live documenta
 
 ## LLM & Machine Learning
 - **PyTorch** → https://www.pythonsheets.com/notes/llm/pytorch.html
-- **Distributed Training** → https://www.pythonsheets.com/notes/llm/distributed.html
+- **Megatron / Distributed Training** → https://www.pythonsheets.com/notes/llm/megatron.html
 - **LLM Serving** → https://www.pythonsheets.com/notes/llm/llm-serving.html
 - **LLM Benchmarking** → https://www.pythonsheets.com/notes/llm/llm-bench.html
 
 ## High-Performance Computing
 - **Slurm HPC** → https://www.pythonsheets.com/notes/hpc/slurm.html
+
+## Appendix
+- **Disaggregated Prefill/Decode** → https://www.pythonsheets.com/notes/appendix/disaggregated-prefill-decode.html
+- **Megatron EFA Monitoring** → https://www.pythonsheets.com/notes/appendix/megatron-efa-monitoring.html
+- **NCCL GIN** → https://www.pythonsheets.com/notes/appendix/nccl-gin.html
+- **Walrus Operator** → https://www.pythonsheets.com/notes/appendix/python-walrus.html
+- **Python GDB Debugging** → https://www.pythonsheets.com/notes/appendix/python-gdb.html
