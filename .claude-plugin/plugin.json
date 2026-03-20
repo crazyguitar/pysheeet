@@ -1,0 +1,11 @@
+{
+  "name": "pysheeet",
+  "description": "Comprehensive Python programming reference covering syntax, concurrency, networking, databases, ML/LLM development, and HPC",
+  "version": "1.0.0",
+  "author": {
+    "name": "crazyguitar"
+  },
+  "homepage": "https://www.pythonsheets.com",
+  "repository": "https://github.com/crazyguitar/pysheeet",
+  "license": "MIT"
+}

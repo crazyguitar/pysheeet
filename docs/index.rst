@@ -25,11 +25,21 @@ If there is any question or suggestion, please create an issue on `GitHub Issues
 .. _fork pysheeet on GitHub: https://github.com/crazyguitar/pysheeet
 .. _GitHub Issues: https://github.com/crazyguitar/pysheeet/issues
 
-/py Skill
----------
+Plugin
+------
 
-**pysheeet** now includes **Claude Skills integration**. Get intelligent access to all cheat sheets directly within Claude Code and Claude.ai through our custom ``/py`` skill.
-For installation and setup instructions, see the main `README <https://github.com/crazyguitar/pysheeet/blob/master/README.rst>`_.
+**pysheeet** is available as a `Claude Code <https://claude.com/claude-code>`_ plugin. Once installed,
+Claude automatically uses the cheat sheets to answer Python questions.
+
+.. code-block:: bash
+
+    # Step 1: Add the marketplace
+    claude plugin marketplace add crazyguitar/pysheeet
+
+    # Step 2: Install the plugin
+    claude plugin install pysheeet@pysheeet
+
+For local testing and manual installation, see the main `README <https://github.com/crazyguitar/pysheeet/blob/master/README.rst>`_.
 
 What's New In Python 3
 ----------------------

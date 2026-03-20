@@ -28,23 +28,39 @@ coding faster, easier, and more enjoyable. You can explore all the cheat sheets 
 `Pysheeet <https://www.pythonsheets.com/>`_. Contributions are always welcome—feel
 free to fork the repo and submit a pull request to help it grow!
 
-/py Skill
-=========
+Plugin
+======
 
-**pysheeet** includes Claude Skills integration for intelligent access to Python cheat sheets directly within Claude Code and Claude.ai.
+**pysheeet** is available as a Claude Code plugin. Once installed, Claude
+automatically uses the cheat sheets to answer Python questions — just ask
+naturally and the skill triggers based on context.
 
 Installation
 ------------
 
+**As a Claude Code plugin (recommended):**
+
 .. code-block:: bash
 
-    # Install globally for Claude Code
-    mkdir -p ~/.claude/skills
-    cp -r skills ~/.claude/skills/py
+    # Step 1: Add the marketplace
+    claude plugin marketplace add crazyguitar/pysheeet
 
-    # Once installed, simply ask Claude any Python question and the ``/py``
-    # skill will automatically provide relevant examples and documentation
-    # from this cheat sheet collection.
+    # Step 2: Install the plugin
+    claude plugin install pysheeet@pysheeet
+
+**Local testing (single session only):**
+
+.. code-block:: bash
+
+    claude --plugin-dir /path/to/pysheeet
+
+**Manual installation (requires cloning the repo):**
+
+.. code-block:: bash
+
+    git clone https://github.com/crazyguitar/pysheeet.git
+    mkdir -p ~/.claude/skills
+    cp -r pysheeet/skills/py ~/.claude/skills/py
 
 What's New In Python 3
 ======================
