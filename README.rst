@@ -191,9 +191,10 @@ HPC
 ===
 
 High-Performance Computing tools for cluster management and job scheduling.
-Covers Slurm workload manager for distributed computing and GPU clusters.
+Covers Slurm workload manager and Ray for distributed computing on GPU clusters.
 
 - `Slurm <docs/notes/hpc/slurm.rst>`_
+- `Ray Cluster <docs/notes/hpc/ray.rst>`_
 
 
 Blog
