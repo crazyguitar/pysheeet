@@ -16,3 +16,4 @@ efficiently manage and schedule workloads on HPC clusters.
    :maxdepth: 1
 
    slurm
+   ray
