@@ -36,8 +36,11 @@ extensions = [
     'sphinx_copybutton',
     'sphinx.ext.graphviz',
     'sphinx_design',
-    'sphinx.ext.extlinks'
+    'sphinx.ext.extlinks',
+    'notfound.extension'
 ]
+
+notfound_urls_prefix = "/"
 
 myst_enable_extensions = [
     "colon_fence",

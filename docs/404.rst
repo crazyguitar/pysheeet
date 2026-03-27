@@ -5,4 +5,4 @@
 
 What you were looking for is just not there.
 
-`Click here to go back to homepage. </>`_
+`Click here to go back to homepage. <https://www.pythonsheets.com/>`_
