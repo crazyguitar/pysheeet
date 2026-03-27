@@ -51,3 +51,45 @@ We also benchmark
 `pplx-kernels <https://github.com/perplexityai/pplx-kernels>`_ to assess
 whether MoE dispatch and combine operations benefit from multi-NIC EFA on the
 libfabric backend.
+
+NVSHMEM Device All-to-All
+-------------------------
+
+To verify that multi-NIC round-robin is functioning correctly, we use
+`rdmatop <https://github.com/crazyguitar/rdmatop>`_ to monitor RDMA traffic
+across all EFA NICs during NVSHMEM benchmarks. The experiments follow the
+NVSHMEM examples in the
+`rdmatop <https://github.com/crazyguitar/rdmatop/tree/main/examples/nvshmem>`_
+repository.
+
+We run two benchmarks from the NVSHMEM perftest suite on a Slurm cluster. The first measures point-to-point put bandwidth between a single GPU
+per node, and the second measures device-initiated all-to-all latency across
+all 8 GPUs per node.
+
+Put Bandwidth (Inter-Node, 1 GPU per Node)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In this experiment, we launch a point-to-point job with one sender and one
+receiver to verify whether a single GPU can fully utilize all available EFA
+NICs via round-robin NIC selection.
+
+.. code-block:: bash
+
+    salloc -N 2 NTASKS_PER_NODE=1 \
+      bash examples/nvshmem/nvshmem.sbatch \
+      /opt/nvshmem/bin/perftest/device/pt-to-pt/shmem_put_bw \
+      -b 8 -e 128M -f 2 -n 1000 -w 100
+
+All-to-All Latency (Device, All 8 GPUs per Node)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This experiment uses the NVSHMEM device all-to-all performance tool to
+determine whether all-to-all communication can fully saturate all EFA NICs
+when all 8 GPUs per node participate.
+
+.. code-block:: bash
+
+    NODES=2 # 4, 8, 16
+    salloc -N ${NODES} bash examples/nvshmem/nvshmem.sbatch \
+      /opt/nvshmem/bin/perftest/device/coll/alltoall_latency \
+      -b 16 -e 1G -f 2 -n 1000 -s all
