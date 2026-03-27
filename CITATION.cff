@@ -7,10 +7,10 @@ authors:
   orcid: "https://orcid.org/0009-0000-5297-5940"
   github: "crazyguitar"
 abstract: "A comprehensive Python cheat sheet covering Python 2 and 3 syntax, tips, and code snippets."
-version: "master"
+version: "1.2.0"
 repository-code: "https://github.com/crazyguitar/pysheeet"
 license: "MIT"
-date-released: "2016-02-29"
+date-released: "2026-03-26"
 url: "https://www.pythonsheets.com"
 keywords:
   - python
