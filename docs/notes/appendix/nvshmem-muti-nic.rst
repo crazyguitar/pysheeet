@@ -142,3 +142,13 @@ After applying the fix, we can observe that Rx traffic is balanced across all
 NICs in the all-to-all experiment.
 
 .. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-fix.gif
+
+We also compare the all-to-all bandwidth across different node counts for
+NVSHMEM 3.5.21, NVSHMEM 3.6.5, and NVSHMEM 3.6.5 with the Rx imbalance fix.
+With the fix applied, throughput is significantly higher than both other
+configurations. Notably, without the fix, even though NVSHMEM 3.6.5 utilizes
+multiple NICs for Tx, the Rx imbalance becomes a bottleneck—resulting in
+throughput that can be lower than single-NIC mode, as observed in the 2-node
+and 4-node cases.
+
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-all2all-bandwidth.png
