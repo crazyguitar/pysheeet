@@ -1,3 +1,4 @@
 *.png filter=lfs diff=lfs merge=lfs -text
 docs/_static/appendix/*.png !filter !diff !merge
 docs/_static/appendix/nixl/*.png !filter !diff !merge
+docs/_static/appendix/nvshmem/*.png !filter !diff !merge
