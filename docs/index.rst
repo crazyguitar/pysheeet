@@ -55,6 +55,17 @@ this part provides a brief glance of new features in Python 3.
 
    notes/python-new-py3
 
+Blog
+----
+
+This section explores advanced topics such as LLM training, inference,
+HPC networking, distributed systems, GPU computing, and Python debugging
+techniques.
+
+.. toctree::
+   :maxdepth: 1
+
+   notes/appendix/index
 
 Python Cheat Sheet
 ------------------
@@ -77,4 +88,3 @@ everyday tasks.
    notes/extension/index
    notes/llm/index
    notes/hpc/index
-   notes/appendix/index
