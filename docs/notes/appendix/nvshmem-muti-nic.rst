@@ -193,3 +193,42 @@ may dominate the overall MoE kernel performance, resulting in similar dispatch
 and combine throughput between the two versions.
 
 .. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/pplx_bandwidth.png
+
+Conclusion
+----------
+
+NVSHMEM 3.6.5 introduces multi-NIC support for the libfabric transport,
+enabling round-robin NIC selection on AWS instances equipped with multiple EFA
+NICs. Our experiments confirm that this feature allows both point-to-point and
+all-to-all NVSHMEM operations to distribute traffic across all available NICs,
+significantly increasing aggregate bandwidth compared to older NVSHMEM
+versions.
+
+However, we identified an Rx imbalance issue in the initial 3.6.5 release,
+where all PEs select the same round-robin target NIC simultaneously, causing Rx
+traffic to converge on a single NIC. This imbalance can degrade all-to-all
+throughput to levels below single-NIC mode in certain configurations. A
+proposed fix addresses this by offsetting the round-robin selection per PE,
+resulting in balanced Rx traffic and substantially improved all-to-all
+bandwidth.
+
+For pplx-kernels, multi-NIC support successfully distributes traffic across all
+EFA NICs. While NVSHMEM-level bandwidth improves with the Rx fix, the
+end-to-end MoE dispatch and combine throughput shows minimal difference,
+suggesting that kernel computation rather than network bandwidth is the
+dominant factor in these workloads.
+
+Overall, multi-NIC support in NVSHMEM 3.6.5 is an important step toward
+enabling NVSHMEM-based MoE kernels to fully utilize the network capacity of
+AWS GPU instances, and can potentially improve MoE kernel throughput for
+large-scale LLM training and serving workloads.
+
+References
+----------
+
+.. [1] `NVSHMEM 3.6.5 Release <https://github.com/NVIDIA/nvshmem/releases/tag/v3.6.5-0>`_
+.. [2] `DeepEP: an open-source EP communication library <https://github.com/deepseek-ai/DeepEP>`_
+.. [3] `pplx-kernels: NVSHMEM-based MoE kernels <https://github.com/ppl-ai/pplx-kernels>`_
+.. [4] `rdmatop: RDMA traffic monitoring tool <https://github.com/crazyguitar/rdmatop>`_
+.. [5] `libfabric: fix multi-NIC RX imbalance for EFA transport <https://github.com/NVIDIA/nvshmem/pull/76>`_
+.. [6] `Improving Network Performance of HPC Systems Using NVIDIA Magnum IO NVSHMEM and GPUDirect Async <https://developer.nvidia.com/blog/improving-network-performance-of-hpc-systems-using-nvidia-magnum-io-nvshmem-and-gpudirect-async/>`_
