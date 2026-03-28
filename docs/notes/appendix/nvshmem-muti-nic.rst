@@ -95,6 +95,23 @@ when all 8 GPUs per node participate.
       /opt/nvshmem/bin/perftest/device/coll/alltoall_latency \
       -b 16 -e 1G -f 2 -n 1000 -s all
 
+pplx-kernels All-to-All
+-----------------------
+
+To assess whether real-world MoE workloads benefit from multi-NIC support, we
+benchmark `pplx-kernels <https://github.com/ppl-ai/pplx-kernels>`_\—an
+NVSHMEM-based implementation of MoE dispatch and combine operations used in
+production serving systems such as
+`vLLM <https://github.com/vllm-project/vllm>`_. The experiment follows the
+pplx example in the
+`rdmatop <https://github.com/crazyguitar/rdmatop/tree/main/examples/pplx>`_
+repository.
+
+.. code-block:: bash
+
+    salloc -N 2 bash examples/pplx/pplx.sbatch \
+      python3 -m tests.bench_all_to_all
+
 Result
 ------
 
@@ -152,3 +169,20 @@ throughput that can be lower than single-NIC mode, as observed in the 2-node
 and 4-node cases.
 
 .. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-all2all-bandwidth.png
+
+pplx-kernels All-to-All
+~~~~~~~~~~~~~~~~~~~~~~~
+
+With NVSHMEM 3.6.5 (without the Rx imbalance fix), all Tx and Rx NICs are
+active. Although Rx traffic is slightly imbalanced, the MoE dispatch kernel
+itself may distribute tokens unevenly across experts, contributing to the
+imbalance.
+
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-all2all-pplx-original.gif
+
+With NVSHMEM 3.6.5 and the Rx imbalance fix applied, all Tx and Rx NICs
+remain active, and Rx traffic appears relatively more balanced. However, the
+MoE dispatch and combine bandwidth shows no significant difference compared to
+the unfixed version.
+
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-all2all-pplx.gif
