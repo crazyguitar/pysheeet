@@ -133,3 +133,12 @@ demonstrating that multi-NIC round-robin is active during the all-to-all
 operation. However, we observed that Rx traffic was imbalanced across NICs.
 
 .. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-3.6.5.gif
+
+This imbalance occurs because all PEs compute the same round-robin target NIC
+at the same time, causing all traffic to converge on the same NIC. A fix is
+proposed in the PR
+`libfabric: fix multi-NIC RX imbalance for EFA transport <https://github.com/NVIDIA/nvshmem/pull/76>`_.
+After applying the fix, we can observe that Rx traffic is balanced across all
+NICs in the all-to-all experiment.
+
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-fix.gif
