@@ -119,8 +119,8 @@ point-to-point throughput.
 
 .. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-put-3.6.5.gif
 
-All2All Bandwidth
-~~~~~~~~~~~~~~~~~
+All-to-All Latency (Device)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the device all-to-all experiment, NVSHMEM 3.5.21 shows that each GPU
 utilizes only a single NIC to transfer data, consistent with the point-to-point
