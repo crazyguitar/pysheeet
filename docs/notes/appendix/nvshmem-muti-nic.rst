@@ -186,3 +186,10 @@ MoE dispatch and combine bandwidth shows no significant difference compared to
 the unfixed version.
 
 .. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-all2all-pplx.gif
+
+Comparing the two configurations, NVSHMEM bandwidth is relatively higher with
+the Rx imbalance fix applied. However, other factors such as kernel computation
+may dominate the overall MoE kernel performance, resulting in similar dispatch
+and combine throughput between the two versions.
+
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/pplx_bandwidth.png
