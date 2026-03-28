@@ -118,3 +118,18 @@ bandwidth from multiple NICs, significantly increasing the achievable
 point-to-point throughput.
 
 .. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-put-3.6.5.gif
+
+All2All Bandwidth
+~~~~~~~~~~~~~~~~~
+
+In the device all-to-all experiment, NVSHMEM 3.5.21 shows that each GPU
+utilizes only a single NIC to transfer data, consistent with the point-to-point
+results above.
+
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-3.5.21.gif
+
+With NVSHMEM 3.6.5, ``rdmatop`` confirms that all Tx NICs carry traffic,
+demonstrating that multi-NIC round-robin is active during the all-to-all
+operation. However, we observed that Rx traffic was imbalanced across NICs.
+
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-3.6.5.gif
