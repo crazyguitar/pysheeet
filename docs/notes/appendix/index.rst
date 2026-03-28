@@ -16,7 +16,7 @@ More advanced topics and examples can be found in the following link.
 .. toctree::
     :maxdepth: 1
 
-    nvshmem-muti-nic
+    nvshmem-multi-nic
     disaggregated-prefill-decode
     megatron-efa-monitoring
     nccl-gin

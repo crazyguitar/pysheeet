@@ -203,7 +203,7 @@ Blog
 Supplementary topics covering Python internals, debugging techniques, and
 language features that don't fit elsewhere.
 
-- `NVSHMEM Multi-NIC Support with AWS EFA <docs/notes/appendix/nvshmem-muti-nic.rst>`_
+- `NVSHMEM Multi-NIC Support with AWS EFA <docs/notes/appendix/nvshmem-multi-nic.rst>`_
 - `Is Disaggregated Prefill/Decode a Silver Bullet for LLM Serving? <docs/notes/appendix/disaggregated-prefill-decode.rst>`_
 - `Monitoring EFA with NCCL GIN and Nsys <docs/notes/appendix/megatron-efa-monitoring.rst>`_
 - `GPU-Initiated Networking for NCCL on AWS <docs/notes/appendix/nccl-gin.rst>`_
