@@ -62,9 +62,10 @@ NVSHMEM examples in the
 `rdmatop <https://github.com/crazyguitar/rdmatop/tree/main/examples/nvshmem>`_
 repository.
 
-We run two benchmarks from the NVSHMEM perftest suite on a Slurm cluster. The first measures point-to-point put bandwidth between a single GPU
-per node, and the second measures device-initiated all-to-all latency across
-all 8 GPUs per node.
+We run two benchmarks from the NVSHMEM perftest suite on a Slurm cluster. The
+first measures point-to-point put bandwidth between a single GPU per node, and
+the second measures device-initiated all-to-all latency across all 8 GPUs per
+node.
 
 Put Bandwidth (Inter-Node, 1 GPU per Node)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -93,3 +94,27 @@ when all 8 GPUs per node participate.
     salloc -N ${NODES} bash examples/nvshmem/nvshmem.sbatch \
       /opt/nvshmem/bin/perftest/device/coll/alltoall_latency \
       -b 16 -e 1G -f 2 -n 1000 -s all
+
+Result
+------
+
+The following subsections present the results for point-to-point put bandwidth
+and device all-to-all latency, comparing NVSHMEM 3.5.21 (single NIC) against
+3.6.5 (multi-NIC).
+
+Put Bandwidth (Point-to-Point)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the point-to-point put bandwidth experiment, NVSHMEM 3.5.21 uses only a
+single EFA NIC per GPU for both Tx and Rx, as shown by the ``rdmatop`` output
+below. This confirms that, prior to multi-NIC support, each GPU was limited to
+the bandwidth of one NIC regardless of how many were available on the instance.
+
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-put-3.5.21.gif
+
+With NVSHMEM 3.6.5, the same experiment shows traffic distributed across all 4
+EFA NICs via round-robin selection. This allows a single GPU to aggregate
+bandwidth from multiple NICs, significantly increasing the achievable
+point-to-point throughput.
+
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-put-3.6.5.gif
