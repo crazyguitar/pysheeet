@@ -62,11 +62,6 @@ This website also covers advanced topics related to LLM training, inference,
 HPC networking, distributed systems, GPU computing, and Python debugging
 techniques in the `blog </notes/appendix/index.html>`_.
 
-.. toctree::
-   :maxdepth: 1
-
-   notes/appendix/index
-
 Python Cheat Sheet
 ------------------
 
