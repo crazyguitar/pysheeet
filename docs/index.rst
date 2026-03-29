@@ -58,9 +58,9 @@ this part provides a brief glance of new features in Python 3.
 Blog
 ----
 
-This section explores advanced topics such as LLM training, inference,
+This website also covers advanced topics related to LLM training, inference,
 HPC networking, distributed systems, GPU computing, and Python debugging
-techniques.
+techniques in the `blog </notes/appendix/index.html>`_.
 
 .. toctree::
    :maxdepth: 1
