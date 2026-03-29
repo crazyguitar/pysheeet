@@ -127,14 +127,14 @@ single EFA NIC per GPU for both Tx and Rx, as shown by the ``rdmatop`` output
 below. This confirms that, prior to multi-NIC support, each GPU was limited to
 the bandwidth of one NIC regardless of how many were available on the instance.
 
-.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-put-3.5.21.gif
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/master/docs/_static/appendix/nvshmem/nvshmem-put-3.5.21.gif
 
 With NVSHMEM 3.6.5, the same experiment shows traffic distributed across all 4
 EFA NICs via round-robin selection. This allows a single GPU to aggregate
 bandwidth from multiple NICs, significantly increasing the achievable
 point-to-point throughput.
 
-.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-put-3.6.5.gif
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/master/docs/_static/appendix/nvshmem/nvshmem-put-3.6.5.gif
 
 All-to-All Latency (Device)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -143,13 +143,13 @@ In the device all-to-all experiment, NVSHMEM 3.5.21 shows that each GPU
 utilizes only a single NIC to transfer data, consistent with the point-to-point
 results above.
 
-.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-3.5.21.gif
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/master/docs/_static/appendix/nvshmem/nvshmem-3.5.21.gif
 
 With NVSHMEM 3.6.5, ``rdmatop`` confirms that all Tx NICs carry traffic,
 demonstrating that multi-NIC round-robin is active during the all-to-all
 operation. However, we observed that Rx traffic was imbalanced across NICs.
 
-.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-3.6.5.gif
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/master/docs/_static/appendix/nvshmem/nvshmem-3.6.5.gif
 
 This imbalance occurs because all PEs compute the same round-robin target NIC
 at the same time, causing all traffic to converge on the same NIC. A fix is
@@ -158,7 +158,7 @@ proposed in the PR
 After applying the fix, we can observe that Rx traffic is balanced across all
 NICs in the all-to-all experiment.
 
-.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-fix.gif
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/master/docs/_static/appendix/nvshmem/nvshmem-fix.gif
 
 We also compare the all-to-all bandwidth across different node counts for
 NVSHMEM 3.5.21, NVSHMEM 3.6.5, and NVSHMEM 3.6.5 with the Rx imbalance fix.
@@ -168,7 +168,7 @@ multiple NICs for Tx, the Rx imbalance becomes a bottleneck—resulting in
 throughput that can be lower than single-NIC mode, as observed in the 2-node
 and 4-node cases.
 
-.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-all2all-bandwidth.png
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/master/docs/_static/appendix/nvshmem/nvshmem-all2all-bandwidth.png
 
 pplx-kernels All-to-All
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -178,21 +178,21 @@ active. Although Rx traffic is slightly imbalanced, the MoE dispatch kernel
 itself may distribute tokens unevenly across experts, contributing to the
 imbalance.
 
-.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-all2all-pplx-original.gif
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/master/docs/_static/appendix/nvshmem/nvshmem-all2all-pplx-original.gif
 
 With NVSHMEM 3.6.5 and the Rx imbalance fix applied, all Tx and Rx NICs
 remain active, and Rx traffic appears relatively more balanced. However, the
 MoE dispatch and combine bandwidth shows no significant difference compared to
 the unfixed version.
 
-.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/nvshmem-all2all-pplx.gif
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/master/docs/_static/appendix/nvshmem/nvshmem-all2all-pplx.gif
 
 Comparing the two configurations, NVSHMEM bandwidth is relatively higher with
 the Rx imbalance fix applied. However, other factors such as kernel computation
 may dominate the overall MoE kernel performance, resulting in similar dispatch
 and combine throughput between the two versions.
 
-.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/blog/nvshmem/docs/_static/appendix/nvshmem/pplx_bandwidth.png
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/master/docs/_static/appendix/nvshmem/pplx_bandwidth.png
 
 Conclusion
 ----------
