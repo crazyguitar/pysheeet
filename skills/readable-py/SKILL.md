@@ -120,11 +120,57 @@ if not is_eligible:
 - Comment **surprising behavior** or non-obvious decisions — things where a reader would ask "why?".
 - **Don't comment bad code — rewrite it.** If you need a comment to explain what a block does, extract it into a well-named function instead.
 
+## 14. Design Code to Survive Auto-Formatting
+
+- Write code that looks good **after** the auto-formatter runs. If a chained expression or repeated pattern would be broken across 4+ lines by the formatter, extract a helper function instead.
+- **Prefer one-line helper calls** over long inline chains that the formatter will expand vertically.
+- The formatter is your reader's first impression. Run it *before* committing — if the result looks ugly, that's a signal to refactor, not to disable the formatter.
+
+```python
+# Bad: black wraps this into a multi-line mess
+result = (
+    client.get_session()
+    .query(User)
+    .filter(User.active == True)
+    .options(joinedload(User.orders))
+    .order_by(User.created_at.desc())
+    .limit(page_size)
+    .all()
+)
+
+# Good: extract a helper so the call site stays clean
+def get_active_users(session, page_size: int) -> list[User]:
+    return (
+        session.query(User)
+        .filter(User.active == True)
+        .options(joinedload(User.orders))
+        .order_by(User.created_at.desc())
+        .limit(page_size)
+        .all()
+    )
+
+users = get_active_users(client.get_session(), page_size=20)
+```
+
+```python
+# Bad: dict comprehension with inline chain — black expands to 5+ lines
+config = {
+    k: settings.get(k, defaults.get(k, fallbacks.get(k, None)))
+    for k in required_keys
+}
+
+# Good: extract the lookup
+def resolve_setting(key, settings, defaults, fallbacks):
+    return settings.get(key, defaults.get(key, fallbacks.get(key)))
+
+config = {k: resolve_setting(k, settings, defaults, fallbacks) for k in required_keys}
+```
+
 ---
 
 # Python-Specific Rules
 
-## 14. Prefer Comprehensions — But Keep Them Simple
+## 15. Prefer Comprehensions — But Keep Them Simple
 
 - Use list/dict/set comprehensions for **simple transforms and filters**.
 - If a comprehension needs a nested loop AND a conditional, it's too complex — use a regular loop or extract a helper.
@@ -142,26 +188,26 @@ valid_items = get_valid_items(data, item_type="A")
 result = [transform(item) for item in valid_items]
 ```
 
-## 15. Use Unpacking
+## 16. Use Unpacking
 
 - **Tuple unpacking** over index access: `name, age = get_user()` not `result[0], result[1]`.
 - **Star unpacking** for head/tail: `first, *rest = items`.
 - **Dict unpacking** with `**` for merging dicts.
 - Unpacking makes the structure of the data explicit in the code.
 
-## 16. Use `enumerate`, `zip`, and Itertools
+## 17. Use `enumerate`, `zip`, and Itertools
 
 - Use `enumerate(items)` — never track indices manually with `i += 1`.
 - Use `zip(a, b)` to iterate in parallel — never index into parallel lists.
 - Use `itertools` (`chain`, `groupby`, `islice`) before writing manual iteration logic.
 
-## 17. Use Dataclasses and NamedTuples Over Raw Dicts/Tuples
+## 18. Use Dataclasses and NamedTuples Over Raw Dicts/Tuples
 
 - If a dict always has the same keys, it should be a `dataclass` or `NamedTuple`.
 - If a function returns more than 2 values, return a `dataclass` or `NamedTuple` — not a raw tuple.
 - This gives you names, type hints, and readable attribute access for free.
 
-## 18. Use `pathlib` for File Paths
+## 19. Use `pathlib` for File Paths
 
 - Use `pathlib.Path` instead of `os.path.join` and string manipulation.
 - `Path` objects are readable, composable (`/` operator), and cross-platform.
