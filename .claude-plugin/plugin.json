@@ -7,9 +7,5 @@
   },
   "homepage": "https://www.pythonsheets.com",
   "repository": "https://github.com/crazyguitar/pysheeet",
-  "license": "MIT",
-  "skills": [
-    "py",
-    "readable-py"
-  ]
+  "license": "MIT"
 }
