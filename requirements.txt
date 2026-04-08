@@ -1,5 +1,5 @@
 coverage==7.13.5
-cryptography==46.0.6
+cryptography==46.0.7
 argon2-cffi==25.1.0
 cffi==2.0.0
 SQLAlchemy==2.0.49
