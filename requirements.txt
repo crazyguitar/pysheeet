@@ -19,7 +19,7 @@ Sphinx==8.1.3
 Werkzeug==3.1.8
 setuptools>=82.0.1 # not directly required, pinned by Snyk to avoid a vulnerability
 jinja2>=3.1.6 # not directly required, pinned by Snyk to avoid a vulnerability
-zipp>=3.23.1 # not directly required, pinned by Snyk to avoid a vulnerability
+zipp>=4.1.0 # not directly required, pinned by Snyk to avoid a vulnerability
 myst-parser==5.1.0
 sphinx-copybutton==0.5.2
 sphinx_design==0.6.1
