@@ -1,4 +1,4 @@
-coverage==7.14.0
+coverage==7.14.1
 cryptography==48.0.0
 argon2-cffi==25.1.0
 cffi==2.0.0
