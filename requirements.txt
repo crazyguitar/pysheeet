@@ -1,7 +1,7 @@
 coverage==7.15.0
 cryptography==49.0.0
 argon2-cffi==25.1.0
-cffi==2.0.0
+cffi==2.1.0
 SQLAlchemy==2.0.51
 bandit==1.9.4
 coveralls==4.1.0
