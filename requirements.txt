@@ -23,7 +23,7 @@ zipp>=4.1.0 # not directly required, pinned by Snyk to avoid a vulnerability
 myst-parser==5.1.0
 sphinx-copybutton==0.5.2
 sphinx_design==0.6.1
-sphinx-book-theme==1.2.0
+sphinx-book-theme==1.4.0
 sphinx-notfound-page==1.1.0
 urllib3>=2.7.0 # not directly required, pinned by Snyk to avoid a vulnerability
 pygments>=2.20.0 # not directly required, pinned by Snyk to avoid a vulnerability
