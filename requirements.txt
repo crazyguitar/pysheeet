@@ -10,7 +10,7 @@ Flask-SSLify==0.1.5
 Flask-Testing==0.8.1
 Flask-SeaSurf==2.0.0
 flask-talisman==1.1.0
-gunicorn==26.0.0
+gunicorn==26.1.0
 pycodestyle==2.14.0
 pydocstyle==6.3.0
 pytest==9.1.1
@@ -26,5 +26,5 @@ sphinx_design==0.6.1
 sphinx-book-theme==1.2.0
 sphinx-notfound-page==1.1.0
 urllib3>=2.7.0 # not directly required, pinned by Snyk to avoid a vulnerability
-pygments>=2.20.0 # not directly required, pinned by Snyk to avoid a vulnerability
+pygments>=2.21.0 # not directly required, pinned by Snyk to avoid a vulnerability
 idna>=3.19 # not directly required, pinned by Snyk to avoid a vulnerability
