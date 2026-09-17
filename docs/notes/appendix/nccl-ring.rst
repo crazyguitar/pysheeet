@@ -24,6 +24,11 @@ the tensor through a single NIC, leaving the other NICs idle.
 .. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/f27b131543e06feddec1f4af518ca8cb0dbfbc74/docs/_static/appendix/nccl/nccl-broadcast-0.gif
    :alt: RDMA NIC traffic during NCCL broadcast with a single process group.
 
+Introduction
+------------
+
+
+
 .. code-block:: bash
 
     # node 0
