@@ -3,6 +3,23 @@
 NCCL Multi-Rail Broadcast with More Process Groups
 ==================================================
 
+
+Abstract
+--------
+
+NCCL broadcast is used to synchronize model weights between training workers
+and rollout engines in frameworks such as `Slime`_. However, having multiple
+RDMA NICs per node does not guarantee that a broadcast will use them all.
+In our setup, weight transfers use only one NIC, leaving the others idle and
+limiting throughput. This post examines that behavior through experiments,
+then shows how multiple process groups can spread transfers across the
+available NICs to speed up weight updates between nodes.
+
+.. _Slime: https://github.com/THUDM/slime/blob/4c193f1f37509cca70f0e88807a9305b70f63f4e/slime/backends/megatron_utils/update_weight/update_weight_from_distributed.py#L348-L352
+
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/f27b131543e06feddec1f4af518ca8cb0dbfbc74/docs/_static/appendix/nccl/nccl-broadcast-0.gif
+   :alt: RDMA NIC traffic during NCCL broadcast with a single process group.
+
 .. code-block:: bash
 
     # node 0
