@@ -27,6 +27,26 @@ the tensor through a single NIC, leaving the other NICs idle.
 Introduction
 ------------
 
+When a node has multiple RDMA NICs, it is natural to expect a large broadcast
+to use their combined bandwidth. Reaching that bandwidth, however, requires
+traffic to flow through multiple NICs in parallel. In NCCL, those paths depend
+on the participating GPU ranks, the GPU-to-NIC topology, and the communication
+layout. In our single-sender setup, broadcast traffic leaves the node through
+just one NIC. The question is how to involve the other GPUs and NICs so that
+the transfer can use more of the node's available bandwidth.
+
+.. image:: nccl-broadcast-0.png
+
+NCCL's ring broadcast divides the buffer into chunks and pipelines them
+through the participating ranks. Within a node, these transfers can use
+fast GPU interconnects such as NVLink. Including more GPU ranks on the sender
+node gives NCCL additional paths through local GPUs and their nearby NICs.
+Our next experiment places all GPU ranks on both nodes in one process group
+to examine how this changes NIC utilization and throughput. Whether traffic
+spreads across multiple NICs depends on the topology and the channel layout
+NCCL chooses; adding ranks alone does not guarantee it.
+
+.. image:: nccl-broadcast-1.png
 
 
 .. code-block:: bash
