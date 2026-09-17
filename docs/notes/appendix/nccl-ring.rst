@@ -35,7 +35,8 @@ layout. In our single-sender setup, broadcast traffic leaves the node through
 just one NIC. The question is how to involve the other GPUs and NICs so that
 the transfer can use more of the node's available bandwidth.
 
-.. image:: nccl-broadcast-0.png
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/2aa75ef88604baba97a9fd193ea8820e4cb9ad02/docs/_static/appendix/nccl/nccl-broadcast-0.png
+   :alt: Broadcast from a single sender GPU through one NIC to the receiving node.
 
 NCCL's ring broadcast divides the buffer into chunks and pipelines them
 through the participating ranks. Within a node, these transfers can use
@@ -46,7 +47,8 @@ to examine how this changes NIC utilization and throughput. Whether traffic
 spreads across multiple NICs depends on the topology and the channel layout
 NCCL chooses; adding ranks alone does not guarantee it.
 
-.. image:: nccl-broadcast-1.png
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/2aa75ef88604baba97a9fd193ea8820e4cb9ad02/docs/_static/appendix/nccl/nccl-broadcast-8.png
+   :alt: Broadcast chunks transferred through multiple sender GPUs and NICs.
 
 
 .. code-block:: bash
