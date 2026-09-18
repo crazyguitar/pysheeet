@@ -25,6 +25,6 @@ sphinx-copybutton==0.5.2
 sphinx_design==0.6.1
 sphinx-book-theme==1.2.0
 sphinx-notfound-page==1.1.0
-urllib3>=2.7.0 # not directly required, pinned by Snyk to avoid a vulnerability
+urllib3>=2.8.0 # not directly required, pinned by Snyk to avoid a vulnerability
 pygments>=2.21.0 # not directly required, pinned by Snyk to avoid a vulnerability
 idna>=3.19 # not directly required, pinned by Snyk to avoid a vulnerability
