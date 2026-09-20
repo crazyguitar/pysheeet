@@ -49,33 +49,14 @@ using multiple process groups to distribute transfers.
 Experiment
 ----------
 
-Setup and measurement
-~~~~~~~~~~~~~~~~~~~~~
+Environment
+~~~~~~~~~~~
 
-On September 20, 2026, we compared two configurations on the same pair of
-Cambrian nodes, each with eight NVIDIA H100 80GB GPUs:
-
-* One participating GPU on the first node and eight on the second node
-  (nine ranks in one process group).
-* Eight participating GPUs on each node (16 ranks in one process group).
-
-The commands use zero-based node indices: ``--node-rank 0`` is the first
-node and ``--node-rank 1`` is the second. In both configurations, global rank
-0 is the only broadcast source. Here, eight "sender ranks" means eight
-participating GPUs on the source node, not eight independent broadcasts or
-eight process groups.
-
-The benchmark in ``src/nccl/broadcast.py`` broadcasts a 1 GiB BF16 tensor.
-After five warmup broadcasts, it measures batches of 100 broadcasts for at
-least 300 seconds per configuration. Each batch synchronizes the GPUs and
-uses the maximum elapsed time across ranks. Reported throughput is payload
-bytes divided by elapsed time, in decimal GB/s; it is not multiplied by the
-receiver count. At the end, every rank checks that the received tensor
-contains the expected values.
-
-Both nodes run PyTorch 2.11.0+cu130, CUDA 13.0, NCCL 2.28.9, and NVIDIA
-driver 570.172.08. We leave NCCL's algorithm, protocol, and NIC selection at
-their defaults and collect initialization logs with ``NCCL_DEBUG=INFO``.
+* **Hardware:** two Cambrian nodes, each with 8 × NVIDIA H100 80GB GPUs.
+* **Software:** PyTorch 2.11.0+cu130, CUDA 13.0, NCCL 2.28.9,
+  NVIDIA driver 570.172.08.
+* **Benchmark:** 1 GiB BF16 broadcast, 300 seconds per configuration.
+* **NCCL:** default settings, with ``NCCL_DEBUG=INFO``.
 
 Single-sender baseline
 ~~~~~~~~~~~~~~~~~~~~~~
