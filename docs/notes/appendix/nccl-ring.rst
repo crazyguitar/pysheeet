@@ -182,16 +182,14 @@ snapshot shows bulk traffic distributed almost evenly across all 16 data
 ports, corresponding to eight GPU-local pairs. The two 100 Gb/s ports carry
 negligible traffic in that snapshot.
 
-The 6.06x improvement comes from adding participating GPU ranks to the same
-process group. It does not measure a multiple-process-group implementation.
+Both experiments use one NCCL process group:
+
+* **1 → 8:** one group containing 9 GPU ranks.
+* **8 → 8:** one group containing 16 GPU ranks.
+
+The 6.06x improvement comes from adding participating GPUs on the source node.
 This result is specific to the tested topology, NCCL version, and payload
 size; adding ranks is not a general guarantee of proportional speedup.
-
-The `measurement data <../../_static/appendix/nccl/broadcast-cambrian-20260920.json>`_
-contains all throughput samples, software versions, the benchmark checksum,
-and the retained NIC-counter observations. The eight-rank counter snapshot
-was captured during the run; its final counter files were unavailable after
-cluster teardown.
 
 .. _Slime: https://github.com/THUDM/slime/blob/4c193f1f37509cca70f0e88807a9305b70f63f4e/slime/backends/megatron_utils/update_weight/update_weight_from_distributed.py#L348-L352
 
