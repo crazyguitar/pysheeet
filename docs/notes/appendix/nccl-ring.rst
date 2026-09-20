@@ -126,6 +126,9 @@ and broadcast source remain the same.
       --master-addr ${MASTER_ADDR} \
       --seconds 300
 
+.. image:: https://raw.githubusercontent.com/crazyguitar/pysheeet/f27b131543e06feddec1f4af518ca8cb0dbfbc74/docs/_static/appendix/nccl/nccl-broadcast-8.gif
+   :alt: RDMA NIC traffic with eight participating GPU ranks on the source node.
+
 Results
 ~~~~~~~
 
