@@ -18,6 +18,7 @@ More advanced topics and examples can be found in the following link.
 .. toctree::
     :maxdepth: 1
 
+    nccl-ring
     nvshmem-multi-nic
     disaggregated-prefill-decode
     megatron-efa-monitoring

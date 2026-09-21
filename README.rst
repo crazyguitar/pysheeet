@@ -213,6 +213,7 @@ Blog
 Supplementary topics covering Python internals, debugging techniques, and
 language features that don't fit elsewhere.
 
+- `NCCL Multi-Rail Broadcast with More GPU Ranks <docs/notes/appendix/nccl-ring.rst>`_
 - `NVSHMEM Multi-NIC Support with AWS EFA <docs/notes/appendix/nvshmem-multi-nic.rst>`_
 - `Is Disaggregated Prefill/Decode a Silver Bullet for LLM Serving? <docs/notes/appendix/disaggregated-prefill-decode.rst>`_
 - `Monitoring EFA with NCCL GIN and Nsys <docs/notes/appendix/megatron-efa-monitoring.rst>`_
