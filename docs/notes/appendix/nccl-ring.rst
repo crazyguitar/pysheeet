@@ -132,6 +132,11 @@ and broadcast source remain the same.
 Results
 ~~~~~~~
 
+Both experiments use one NCCL process group:
+
+* **1 → 8:** one group containing 9 GPU ranks.
+* **8 → 8:** one group containing 16 GPU ranks.
+
 Adding source-node ranks increases median broadcast throughput from
 **47.86 GB/s to 290.17 GB/s**, a **6.06x speedup**. This may seem
 counterintuitive: passing data through more processes introduces additional
@@ -159,14 +164,15 @@ bandwidth outweighs the cost of those transfers.
      - 282.12–290.39
      - 6.06x
 
-Both experiments use one NCCL process group:
+Conclusion
+----------
 
-* **1 → 8:** one group containing 9 GPU ranks.
-* **8 → 8:** one group containing 16 GPU ranks.
+In our experiments, including more source-node GPUs in one process group
+allows NCCL to use more NICs in parallel. For large payloads, the additional
+network bandwidth outweighs the overhead of local GPU transfers. This makes
+the approach useful for bulk transfers such as synchronizing model weights
+between training workers and rollout engines during GRPO.
 
-The improvement therefore comes from involving more source-node GPUs within
-a single process group. It is specific to the tested topology, NCCL version,
-and payload size; adding ranks does not guarantee proportional speedup.
 
 .. _Slime: https://github.com/THUDM/slime/blob/4c193f1f37509cca70f0e88807a9305b70f63f4e/slime/backends/megatron_utils/update_weight/update_weight_from_distributed.py#L348-L352
 
