@@ -92,7 +92,7 @@ line rate of a 400 Gb/s port pair. All ranks pass the payload check.
 
 The figure below is an earlier `rdmatop`_ capture illustrating traffic
 concentrated near the source GPU. For the Cambrian run reported here, NCCL's
-logs identify the source's virtual device as ``mlx5_0+mlx5_1``. RDMA counters
+logs identify the source's virtual device as ``mlx5_11``. RDMA counters
 show bulk traffic split across those two 200 Gb/s ports while the remaining
 source-node ports are effectively idle.
 
@@ -132,48 +132,41 @@ and broadcast source remain the same.
 Results
 ~~~~~~~
 
-Both configurations completed successfully and passed the payload check on
-every rank. The table summarizes one run per configuration; each sample is
-a batch of 100 broadcasts, not a separate experiment.
+Adding source-node ranks increases median broadcast throughput from
+**47.86 GB/s to 290.17 GB/s**, a **6.06x speedup**. This may seem
+counterintuitive: passing data through more processes introduces additional
+transfers. In this setup, however, distributing data across local GPUs over
+NVLink allows NCCL to use more NICs in parallel. The gain in aggregate network
+bandwidth outweighs the cost of those transfers.
 
 .. list-table:: Broadcast throughput for a 1 GiB payload
    :header-rows: 1
-   :widths: 24 12 18 22 12 12
+   :widths: 24 12 18 22 12
 
    * - Source-node ranks
      - Receiver ranks
      - Median (GB/s)
      - Range (GB/s)
-     - Samples
      - Speedup
    * - 1
      - 8
      - 47.86
      - 47.86–47.87
-     - 134
      - 1.00x
    * - 8
      - 8
      - 290.17
      - 282.12–290.39
-     - 808
      - 6.06x
-
-With one source-node rank, NCCL configures four collective channels and sends
-bulk traffic through one GPU-local pair of 200 Gb/s ports. With eight
-source-node ranks, it configures 16 collective channels; an in-run counter
-snapshot shows bulk traffic distributed almost evenly across all 16 data
-ports, corresponding to eight GPU-local pairs. The two 100 Gb/s ports carry
-negligible traffic in that snapshot.
 
 Both experiments use one NCCL process group:
 
 * **1 → 8:** one group containing 9 GPU ranks.
 * **8 → 8:** one group containing 16 GPU ranks.
 
-The 6.06x improvement comes from adding participating GPUs on the source node.
-This result is specific to the tested topology, NCCL version, and payload
-size; adding ranks is not a general guarantee of proportional speedup.
+The improvement therefore comes from involving more source-node GPUs within
+a single process group. It is specific to the tested topology, NCCL version,
+and payload size; adding ranks does not guarantee proportional speedup.
 
 .. _Slime: https://github.com/THUDM/slime/blob/4c193f1f37509cca70f0e88807a9305b70f63f4e/slime/backends/megatron_utils/update_weight/update_weight_from_distributed.py#L348-L352
 
